@@ -4,29 +4,43 @@
 
 namespace parse {
 
+class PeekStream {
+public:
+    PeekStream(std::istream& is): is_(is) {}
+
+    char Peek();
+    char Get();
+
+private:
+    std::istream& is_;
+    char next_ = '\0';
+};
+
 class Lexer {
 public:
+    Lexer(std::istream& is): is_(is >> std::noskipws) {}
+
     Token Peek();
     Token Consume();
     Token Consume(TokenKind expected);
 
-    Lexer(std::istream& is): is_(is >> std::noskipws) {}
-
 private:
-    bool GetChar(char& ch);
+    char GetChar();
+
+    char PeekChar() { return is_.Peek(); }
 
     template <typename Pred>
-    bool GetChar(char& ch, Pred pred);
+    char GetChar(Pred pred);
 
     template <typename Pred>
     size_t GetChars(std::string& str, Pred pred);
 
-    bool TryConsumeChar(char expected);
+    void SkipWhitespace();
 
     // This is where the language-specific magic happens.
     Token GetToken();
 
-    std::istream& is_;
+    PeekStream is_;
     Token buffer_;
     int32_t row_ = 1, col_ = 1;
 };

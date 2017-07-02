@@ -7,9 +7,9 @@ int main() {
     using namespace parse;
     try {
         Lexer lexer(std::cin);
-        while (auto token = lexer.Peek()) {
+        while (auto t = lexer.Peek()) {
             lexer.Consume();
-            LOG(INFO) << "Lexed: " << token;
+            LOG(INFO) << "lex " << t.loc.row << ':' << t.loc.col << ' ' << t;
         }
     } catch (LexError e) {
         LOG(FATAL) << e.loc.row << ':' << e.loc.col << ' ' << e.msg;
