@@ -1,5 +1,5 @@
 CXX = g++
-CXXFLAGS = -std=c++14 -Wall -MMD
+CXXFLAGS = -std=c++14 -Wall -MMD -I.
 
 SRC = $(shell find . -name "*.cpp")
 OBJ = $(SRC:.cpp=.o)
@@ -9,7 +9,7 @@ default: debug
 debug: CXXFLAGS += -O0 -g
 debug: c
 
-release: CXXFLAGS += -O3 -DNDEBUG
+release: CXXFLAGS += -O3 -DNDEBUG -Werror
 release: c
 
 c: $(OBJ)
