@@ -3,6 +3,7 @@ CXXFLAGS = -std=c++14 -Wall -MMD -I.
 
 SRC = $(shell find . -name "*.cpp")
 OBJ = $(SRC:.cpp=.o)
+DEP = $(SRC:.cpp=.d)
 
 default: debug
 
@@ -19,7 +20,7 @@ c: $(OBJ)
 	$(CXX) $(CXXFLAGS) -c -o $@ $<
 
 clean:
-	rm -f c *.o *.d
+	rm -f c $(OBJ) $(DEP)
 
 # Optimize build with auto-generated dependencies.
 -include $(SRC:%.cpp=%.d)

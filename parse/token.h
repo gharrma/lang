@@ -7,17 +7,24 @@ namespace parse {
 
 enum TokenKind {
     kNothing = 0,
+
     kId,
     kIntLit,
     kFloatLit,
     kStrLit,
-    kDot    = '.',
-    kEq     = '=',
-    kPlus   = '+',
-    kMinus  = '-',
-    kTimes  = '*',
-    kDiv    = '/',
-    kMod    = '%',
+
+    kIf,
+    kElse,
+
+    kDot = '.',
+    kEq  = '=',
+
+    kPlus  = '+',
+    kMinus = '-',
+    kTimes = '*',
+    kDiv   = '/',
+    kMod   = '%',
+
     kLParen = '(',
     kRParen = ')',
     kLBrace = '{',

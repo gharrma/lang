@@ -13,7 +13,7 @@ static bool IsIdMiddle(char c) {
 }
 
 // Integers: [0-9]+
-// Floats: [0-9]*[.]?[0-9]*
+// Floats: [0-9]+[.]?[0-9]*
 static bool IsNumChar(char c) { return isdigit(c) || c == '.'; }
 
 char PeekStream::Peek() {

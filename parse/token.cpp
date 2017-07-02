@@ -9,6 +9,8 @@ std::ostream& operator<<(std::ostream& os, const TokenKind kind) {
         case kIntLit:   return os << "int";
         case kFloatLit: return os << "float";
         case kStrLit:   return os << "string";
+        case kIf:       return os << "if";
+        case kElse:     return os << "else";
         case kDot:
         case kEq:
         case kPlus:
