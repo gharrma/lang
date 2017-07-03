@@ -7,12 +7,16 @@
 int main() {
     using namespace parse;
     try {
-        Parser parser(std::cin);
-        auto expr = parser.ParseExpr();
-        std::ostringstream ss;
-        expr->PrettyPrint(ss);
-        ss << std::endl;
-        LOG(INFO) << "[parse] " << ss.str();
+        Lexer lexer(std::cin);
+        Parser parser(lexer);
+        while (true) {
+            std::cout << "expr> ";
+            auto expr = parser.ParseExpr();
+            lexer.Get(parse::kSemicolon);
+            std::cout << "[parse] ";
+            expr->PrettyPrint(std::cout);
+            std::cout << std::endl;
+        }
     }
     catch (LexError e) {
         LOG(FATAL) << "[lex] " << e.loc.row << ':' << e.loc.col

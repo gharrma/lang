@@ -8,7 +8,8 @@ namespace parse {
 
 unique_ptr<Expr> Parser::ParseExpr() {
     auto lhs = ParsePrimaryExpr();
-    return ParseSecondaryExpr(move(lhs), 1);
+    auto res = ParseSecondaryExpr(move(lhs), 1);
+    return res;
 }
 
 #define TRY_PARSE_LIT(kind, rep) \

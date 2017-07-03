@@ -47,8 +47,10 @@ extern TokenInfo token_info;
 struct Token {
     TokenKind kind;
     Location loc;
-    uint64_t int_val;
-    double float_val;
+    union {
+        uint64_t int_val;
+        double float_val;
+    };
     std::string str_val;
 
     Token(): Token(kNothing, Location()) {}

@@ -17,4 +17,12 @@ void Prefix::PrettyPrint(std::ostream& os) const {
     expr->PrettyPrint(os);
 };
 
+template <>
+void Lit<double>::PrettyPrint(std::ostream& os) const {
+    os << val;
+    if (val == static_cast<int64_t>(val)) {
+        os << ".0";
+    }
+}
+
 } // namespace parse

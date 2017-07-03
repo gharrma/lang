@@ -9,16 +9,15 @@ namespace parse {
 
 class Parser {
 public:
-    Parser(std::istream& is): lex_(is) {}
-
+    Parser(Lexer& lex): lex_(lex) {}
     unique_ptr<Expr> ParseExpr();
-    unique_ptr<Expr> ParsePrimaryExpr();
-    unique_ptr<Expr> ParseSecondaryExpr(unique_ptr<Expr> lhs, int32_t min_prec);
 
 private:
+    unique_ptr<Expr> ParsePrimaryExpr();
+    unique_ptr<Expr> ParseSecondaryExpr(unique_ptr<Expr> lhs, int32_t min_prec);
     [[noreturn]] void Expected(std::string expectation = "");
 
-    Lexer lex_;
+    Lexer& lex_;
 };
 
 struct ParseError {

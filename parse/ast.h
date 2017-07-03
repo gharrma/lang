@@ -53,6 +53,10 @@ struct Lit : Expr {
     void PrettyPrint(std::ostream& os) const { os << val; };
 };
 
+// Custom pretty printing for float literals.
+template <>
+void Lit<double>::PrettyPrint(std::ostream& os) const;
+
 } // parse
 
 #endif // AST_H
