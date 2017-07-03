@@ -28,6 +28,24 @@ std::ostream& operator<<(std::ostream& os, const TokenKind kind) {
     }
 }
 
+TokenInfo::TokenInfo() {
+    using Levels = std::initializer_list<std::initializer_list<TokenKind>>;
+    Levels levels = {
+        {kPlus, kMinus},
+        {kTimes, kDiv, kMod},
+    };
+    size_t curr_prec = 1;
+    for (auto level : levels) {
+        for (auto kind : level) {
+            auto kind_char = static_cast<size_t>(kind);
+            prec[kind_char] = curr_prec;
+        }
+        ++curr_prec;
+    }
+}
+
+TokenInfo token_info;
+
 std::ostream& operator<<(std::ostream& os, const Token& token) {
     switch (token.kind) {
         case kId:       return os << token.str_val;

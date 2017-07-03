@@ -35,6 +35,14 @@ enum TokenKind {
 
 std::ostream& operator<<(std::ostream& os, const TokenKind kind);
 
+struct TokenInfo {
+    static constexpr size_t range = std::numeric_limits<char>::max() + 1;
+    int32_t prec[range]; // Token precedence.
+    TokenInfo();
+};
+
+extern TokenInfo token_info;
+
 struct Token {
     TokenKind kind;
     Location loc;

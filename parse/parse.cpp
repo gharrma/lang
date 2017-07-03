@@ -5,31 +5,23 @@ using std::move;
 
 namespace parse {
 
-std::unordered_map<TokenKind, int32_t> prec_map({
-    {kPlus, 1}, {kMinus, 1},
-    {kTimes, 2}, {kDiv, 2}, {kMod, 2},
-});
-
 unique_ptr<Expr> Parser::ParseExpr() {
     auto lhs = ParsePrimaryExpr();
     return ParseSecondaryExpr(move(lhs), 1);
 }
 
+#define TRY_PARSE_LIT(kind, rep) \
+    do if (auto token = lex_.TryGet(kind)) { \
+        using Rep = decltype(token.rep); \
+        return make_unique<Lit<Rep>>(token.loc, token.rep); \
+    } while (0);
+
 unique_ptr<Expr> Parser::ParsePrimaryExpr() {
+    TRY_PARSE_LIT(kIntLit, int_val);
+    TRY_PARSE_LIT(kFloatLit, float_val);
+    TRY_PARSE_LIT(kStrLit, str_val);
     if (auto token = lex_.TryGet(kId)) {
         return make_unique<Id>(token.loc, token.str_val);
-    }
-    if (auto token = lex_.TryGet(kIntLit)) {
-        using Rep = decltype(token.int_val);
-        return make_unique<Lit<Rep>>(token.loc, token.int_val);
-    }
-    if (auto token = lex_.TryGet(kFloatLit)) {
-        using Rep = decltype(token.float_val);
-        return make_unique<Lit<Rep>>(token.loc, token.float_val);
-    }
-    if (auto token = lex_.TryGet(kStrLit)) {
-        using Rep = decltype(token.str_val);
-        return make_unique<Lit<Rep>>(token.loc, token.str_val);
     }
     if (auto token = lex_.TryGet(kLParen)) {
         lex_.Get(kLParen);
@@ -44,12 +36,12 @@ unique_ptr<Expr> Parser::ParseSecondaryExpr(unique_ptr<Expr> lhs,
                                             int32_t min_prec) {
     while (true) {
         Token op = lex_.TryGet([min_prec](TokenKind kind) {
-            return prec_map[kind] >= min_prec;
+            return token_info.prec[kind] >= min_prec;
         });
         if (!op) return lhs;
-        auto op_prec = prec_map[op.kind];
+        auto op_prec = token_info.prec[op.kind];
         auto rhs = ParsePrimaryExpr();
-        if (prec_map[lex_.Peek().kind] > op_prec)
+        if (token_info.prec[lex_.Peek().kind] > op_prec)
             rhs = ParseSecondaryExpr(move(rhs), op_prec + 1);
         lhs = make_unique<Binary>(op, move(lhs), move(rhs));
     }
