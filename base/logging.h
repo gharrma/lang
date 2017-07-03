@@ -17,22 +17,22 @@ constexpr bool kDebug = false;
 constexpr bool kDebug = true;
 #endif
 
-#define INFO log::kInfo
-#define WARNING log::kWarning
-#define ERROR log::kError
-#define FATAL log::kFatal
+#define INFO logging::kInfo
+#define WARNING logging::kWarning
+#define ERROR logging::kError
+#define FATAL logging::kFatal
 
 #define LOG(level) \
-    LAZY_STREAM(log::Logger(level), kDebug || level >= log::kWarning) \
+    LAZY_STREAM(logging::Logger(level), kDebug || level >= logging::kWarning) \
     << __FILE__ << ':' << __LINE__ \
-    << " [" << log::LoggingLevelStr(level) << "] "
+    << " [" << logging::LoggingLevelStr(level) << "] "
 
 // Helper macro which avoids evaluating the arguments to a stream if
 // the condition doesn't hold.
 #define LAZY_STREAM(stream, condition) \
-    !(condition) ? (void) 0 : log::LogVoidify() & (stream)
+    !(condition) ? (void) 0 : logging::LogVoidify() & (stream)
 
-namespace log {
+namespace logging {
 
 enum LoggingLevel {
     kInfo = 0, // Print only when debugging.
@@ -77,6 +77,6 @@ struct LogVoidify {
   void operator&(Logger&) {}
 };
 
-} // namespace log
+} // namespace logging
 
 #endif // LOG_H

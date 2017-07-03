@@ -1,5 +1,6 @@
 #ifndef LEX_H
 #define LEX_H
+#include "base/logging.h"
 #include "base/util.h"
 #include "parse/token.h"
 
@@ -24,6 +25,8 @@ public:
     Token Get() {
         if (auto res = Peek()) {
             buffer_.kind = kNothing;
+            LOG(INFO) << "[lex] " << res.loc.row << ':' << res.loc.col
+                      << ' ' << res;
             return res;
         } else {
             throw LexError("Unexpected end of input",

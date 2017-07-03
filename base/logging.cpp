@@ -1,6 +1,6 @@
 #include "base/logging.h"
 
-namespace log {
+namespace logging {
 
 const char* LoggingLevelStr(LoggingLevel level) {
     switch (level) {
@@ -11,4 +11,4 @@ const char* LoggingLevelStr(LoggingLevel level) {
     }
 }
 
-} // namespace log
+} // namespace logging
