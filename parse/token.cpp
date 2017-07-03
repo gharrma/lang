@@ -36,10 +36,8 @@ TokenInfo::TokenInfo() {
     };
     size_t curr_prec = 1;
     for (auto level : levels) {
-        for (auto kind : level) {
-            auto kind_char = static_cast<size_t>(kind);
-            prec[kind_char] = curr_prec;
-        }
+        for (auto kind : level)
+            prec[kind] = curr_prec;
         ++curr_prec;
     }
 }
