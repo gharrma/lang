@@ -8,34 +8,34 @@
 int main() {
     using namespace parse;
     using namespace typecheck;
-    try {
-        Lexer lexer(std::cin);
-        Parser parser(lexer);
-        while (true) {
+    Lexer lexer(std::cin);
+    Parser parser(lexer);
+    while (true) {
+        try {
             std::cout << "c> ";
             auto expr = parser.ParseExpr();
             lexer.Get(parse::kSemicolon);
             std::cout << "[parse] ";
             expr->PrettyPrint(std::cout);
             std::cout << std::endl;
-            std::cout << "[value] " << expr->Eval() << std::endl;
+            auto value = expr->Eval();
+            std::cout << "[value] " << value << std::endl;
+        }
+        catch (LexError e) {
+            std::cerr << e.loc.row << ':' << e.loc.col << " [lex] "
+                      << e.msg << std::endl;
+        }
+        catch (ParseError e) {
+            std::cerr << e.loc.row << ':' << e.loc.col << " [parse] "
+                      << e.msg << std::endl;
+        }
+        catch (TypeError e) {
+            std::cerr << e.loc.row << ':' << e.loc.col << " [typecheck] "
+                      << e.msg << std::endl;
+        }
+        catch (InternalCompilerError e) {
+            LOG(FATAL) << e.msg;
         }
     }
-    catch (LexError e) {
-        LOG(FATAL) << "[lex] " << e.loc.row << ':' << e.loc.col
-                   << ' ' << e.msg;
-    }
-    catch (ParseError e) {
-        LOG(FATAL) << "[parse] " << e.loc.row << ':' << e.loc.col
-                   << ' ' << e.msg;
-    }
-    catch (TypeError e) {
-        LOG(FATAL) << "[typecheck] " << e.loc.row << ':' << e.loc.col
-                   << ' ' << e.msg;
-    }
-    catch (InternalCompilerError e) {
-        LOG(FATAL) << e.msg;
-    }
-
     return 0;
 }

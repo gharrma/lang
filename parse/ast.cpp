@@ -39,7 +39,7 @@ Number Binary::Eval() const {
     if (!l || !r) return Number();
     if (l.kind != r.kind) {
         throw TypeError(
-            BuildStr("Invalid operands to binary operator \'", op, "\'"),
+            BuildStr("Invalid operands to binary operator \'", op, "\'."),
             op.loc);
     }
     auto type = l.kind;
@@ -50,7 +50,7 @@ Number Binary::Eval() const {
         case kDiv:   RET_BINOP(type, /, l, r);
         case kMod:
             if (type == Number::kFloat)
-                throw TypeError("Binary operator requires integer operands",
+                throw TypeError("Binary operator requires integer operands.",
                                 op.loc);
             return Number(l.int_val % r.int_val);
         default:
