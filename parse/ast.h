@@ -19,19 +19,18 @@ struct Expr : Node {
     Expr(Location loc): Node(loc) {}
 };
 
-struct Binop : Expr {
+struct Binary : Expr {
     unique_ptr<Expr> lhs, rhs;
-    Binop(unique_ptr<Expr> lhs, unique_ptr<Expr> rhs)
-        : Expr(Location(lhs->loc.row,
-                        lhs->loc.col,
-                        rhs->loc.end_row,
-                        rhs->loc.end_col))
+    Binary(unique_ptr<Expr> lhs, unique_ptr<Expr> rhs)
+        : Expr(Location(lhs->loc, rhs->loc))
         , lhs(move(lhs))
         , rhs(move(rhs)) {}
 };
 
-struct Unop : Expr {
+struct Unary : Expr {
     unique_ptr<Expr> expr;
+    Unary(unique_ptr<Expr> expr)
+        : Expr(expr->loc), expr(move(expr)) {}
 };
 
 struct Lit : Expr {

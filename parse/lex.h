@@ -4,18 +4,6 @@
 
 namespace parse {
 
-class PeekStream {
-public:
-    PeekStream(std::istream& is): is_(is) {}
-
-    char Peek();
-    char Get();
-
-private:
-    std::istream& is_;
-    char next_ = '\0';
-};
-
 class Lexer {
 public:
     Lexer(std::istream& is): is_(is >> std::noskipws) {}
@@ -25,31 +13,43 @@ public:
     Token Consume(TokenKind expected);
 
 private:
-    char GetChar();
+    class PositionedStream {
+    public:
+        PositionedStream(std::istream& is): is_(is) {}
 
-    char PeekChar() { return is_.Peek(); }
+        char Peek();
 
-    template <typename Pred>
-    char GetChar(Pred pred);
+        char Get();
 
-    template <typename Pred>
-    size_t GetChars(std::string& str, Pred pred);
+        template <typename Pred>
+        char Get(Pred pred);
 
-    void SkipWhitespace();
+        template <typename Pred>
+        size_t Get(std::string& str, Pred pred);
+
+        void SkipWhitespace();
+
+        int32_t Row() { return row_; }
+
+        int32_t Col() { return col_; }
+
+    private:
+        std::istream& is_;
+        char next_ = '\0';
+        int32_t row_ = 1, col_ = 1;
+    };
 
     // This is where the language-specific magic happens.
     Token GetToken();
 
-    PeekStream is_;
+    PositionedStream is_;
     Token buffer_;
-    int32_t row_ = 1, col_ = 1;
 };
 
 struct LexError {
     std::string msg;
     Location loc;
-    LexError(std::string msg, Location loc)
-        : msg(msg), loc(loc) {}
+    LexError(std::string msg, Location loc): msg(msg), loc(loc) {}
 };
 
 } // namespace parse

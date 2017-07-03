@@ -16,22 +16,6 @@ static bool IsIdMiddle(char c) {
 // Floats: [0-9]+[.]?[0-9]*
 static bool IsNumChar(char c) { return isdigit(c) || c == '.'; }
 
-char PeekStream::Peek() {
-    if (!next_)
-        if (!is_.get(next_))
-            next_ = '\0';
-    return next_;
-}
-
-char PeekStream::Get() {
-    if (!next_)
-        if (!is_.get(next_))
-            next_ = '\0';
-    auto res = next_;
-    next_ = '\0';
-    return res;
-}
-
 Token Lexer::Peek() {
     if (!buffer_)
         buffer_ = GetToken();
@@ -43,7 +27,8 @@ Token Lexer::Consume() {
         buffer_ = Token();
         return res;
     } else {
-        throw LexError("Unexpected end of input", Location(row_, col_));
+        throw LexError("Unexpected end of input",
+                       Location(is_.Row(), is_.Col()));
     }
 }
 
@@ -56,18 +41,29 @@ Token Lexer::Consume(TokenKind expected) {
     return res;
 }
 
-char Lexer::GetChar() {
-    auto ch = is_.Get();
-    if (ch == '\n') ++row_, col_ = 1;
-    else if (ch) ++col_;
-    return ch;
+char Lexer::PositionedStream::Peek() {
+    if (!next_)
+        if (!is_.get(next_))
+            next_ = '\0';
+    return next_;
+}
+
+char Lexer::PositionedStream::Get() {
+    if (!next_)
+        if (!is_.get(next_))
+            next_ = '\0';
+    auto res = next_;
+    next_ = '\0';
+    if (res == '\n') ++row_, col_ = 1;
+    else if (res) ++col_;
+    return res;
 }
 
 template <typename Pred>
-char Lexer::GetChar(Pred pred) {
-    auto ch = PeekChar();
+char Lexer::PositionedStream::Get(Pred pred) {
+    auto ch = Peek();
     if (ch && pred(ch)) {
-        auto res = GetChar();
+        auto res = Get();
         assert(res == ch);
         return res;
     } else {
@@ -76,38 +72,40 @@ char Lexer::GetChar(Pred pred) {
 }
 
 template <typename Pred>
-size_t Lexer::GetChars(std::string& str, Pred pred) {
+size_t Lexer::PositionedStream::Get(std::string& str, Pred pred) {
     size_t count = 0;
-    while (auto ch = GetChar(pred))
+    while (auto ch = Get(pred))
         str += ch, ++count;
     return count;
 }
 
-void Lexer::SkipWhitespace() {
-    while (GetChar([](char ch) { return isspace(ch); }));
+void Lexer::PositionedStream::SkipWhitespace() {
+    while (Get([](char ch) { return isspace(ch); }));
 }
 
 Token Lexer::GetToken() {
-    SkipWhitespace();
+    is_.SkipWhitespace();
 
-    auto GetLocation = [start_row = row_, start_col = col_, this]() {
-        return Location(start_row, start_col, row_, col_);
+    auto GetLocation = [start_row = is_.Row(),
+                        start_col = is_.Col(),
+                        this]() {
+        return Location(start_row, start_col, is_.Row(), is_.Col());
     };
 
-    auto ch = GetChar();
+    auto ch = is_.Get();
     if (!ch) return Token();
 
     // Identifiers.
     if (IsIdStart(ch)) {
         std::string str(1, ch);
-        GetChars(str, IsIdMiddle);
+        is_.Get(str, IsIdMiddle);
         return Token(kId, GetLocation(), str);
     }
 
     // Numbers.
-    if (isdigit(ch) || (ch == '.' && isdigit(PeekChar()))) {
+    if (isdigit(ch) || (ch == '.' && isdigit(is_.Peek()))) {
         std::string str(1, ch);
-        GetChars(str, IsNumChar);
+        is_.Get(str, IsNumChar);
         Token lit;
         size_t actual_len;
         bool decimal = str.find('.') != std::string::npos;
