@@ -1,6 +1,5 @@
 #include <cassert>
 #include "base/logging.h"
-#include "base/util.h"
 #include "main/error.h"
 #include "parse/lex.h"
 
@@ -15,31 +14,6 @@ static bool IsIdMiddle(char c) {
 // Integers: [0-9]+
 // Floats: [0-9]+[.]?[0-9]*
 static bool IsNumChar(char c) { return isdigit(c) || c == '.'; }
-
-Token Lexer::Peek() {
-    if (!buffer_)
-        buffer_ = GetToken();
-    return buffer_;
-}
-
-Token Lexer::Consume() {
-    if (auto res = Peek()) {
-        buffer_ = Token();
-        return res;
-    } else {
-        throw LexError("Unexpected end of input",
-                       Location(is_.Row(), is_.Col()));
-    }
-}
-
-Token Lexer::Consume(TokenKind expected) {
-    auto res = Consume();
-    if (res.kind != expected)
-        throw LexError(BuildStr("Expected token ", expected,
-                                "; instead found ", res),
-                       res.loc);
-    return res;
-}
 
 char Lexer::PositionedStream::Peek() {
     if (!next_)
@@ -72,7 +46,7 @@ char Lexer::PositionedStream::Get(Pred pred) {
 }
 
 template <typename Pred>
-size_t Lexer::PositionedStream::Get(std::string& str, Pred pred) {
+size_t Lexer::PositionedStream::GetWhile(std::string& str, Pred pred) {
     size_t count = 0;
     while (auto ch = Get(pred))
         str += ch, ++count;
@@ -98,14 +72,14 @@ Token Lexer::GetToken() {
     // Identifiers.
     if (IsIdStart(ch)) {
         std::string str(1, ch);
-        is_.Get(str, IsIdMiddle);
+        is_.GetWhile(str, IsIdMiddle);
         return Token(kId, GetLocation(), str);
     }
 
     // Numbers.
     if (isdigit(ch) || (ch == '.' && isdigit(is_.Peek()))) {
         std::string str(1, ch);
-        is_.Get(str, IsNumChar);
+        is_.GetWhile(str, IsNumChar);
         Token lit;
         size_t actual_len;
         bool decimal = str.find('.') != std::string::npos;
@@ -138,7 +112,7 @@ Token Lexer::GetToken() {
         case '(': case ')': case '{': case '}': case '[': case ']':
             return Token(static_cast<TokenKind>(ch), GetLocation());
         default:
-            throw LexError(BuildStr("Unexpected character ", ch),
+            throw LexError(BuildStr("Unexpected character \'", ch, "\'"),
                            GetLocation());
     }
 }
