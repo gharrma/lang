@@ -29,7 +29,7 @@ unique_ptr<Expr> Parser::ParsePrimaryExpr() {
         lex_.Get(kRParen);
         return res;
     }
-    Unexpected(lex_.Peek(), "primary expression");
+    Expected("primary expression");
 }
 
 unique_ptr<Expr> Parser::ParseSecondaryExpr(unique_ptr<Expr> lhs,
@@ -47,15 +47,26 @@ unique_ptr<Expr> Parser::ParseSecondaryExpr(unique_ptr<Expr> lhs,
     }
 }
 
-void Parser::Unexpected(Token token, std::string expectation) {
+void Parser::Expected(std::string expectation) {
+    Token next = lex_.Peek();
+    Location loc = next ? next.loc : lex_.CurrLoc();
     std::string msg;
     if (expectation.empty()) {
-        msg = BuildStr("Unexpected token \'", token, "\'");
+        if (next) {
+            msg = BuildStr("Unexpected token \'", next, "\'.");
+        } else {
+            msg = "Unexpected end of input.";
+        }
     } else {
-        msg = BuildStr("Expected ", expectation,
-                       "; instead found \'", token, "\'");
+        if (next) {
+            msg = BuildStr("Expected ", expectation,
+                           "; instead found \'", next, "\'.");
+        } else {
+            msg = BuildStr("Expected ", expectation,
+                           "; instead found end of input.");
+        }
     }
-    throw ParseError(msg, token.loc);
+    throw ParseError(msg, loc);
 }
 
 } // namespace parse

@@ -16,7 +16,7 @@ public:
     unique_ptr<Expr> ParseSecondaryExpr(unique_ptr<Expr> lhs, int32_t min_prec);
 
 private:
-    [[noreturn]] void Unexpected(Token token, std::string expectation = "");
+    [[noreturn]] void Expected(std::string expectation = "");
 
     Lexer lex_;
 };

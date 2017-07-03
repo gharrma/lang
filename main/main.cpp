@@ -1,6 +1,6 @@
 #include <iostream>
 #include "base/logging.h"
-#include "main/error.h"
+#include "base/util.h"
 #include "parse/lex.h"
 #include "parse/parse.h"
 
@@ -15,7 +15,12 @@ int main() {
         LOG(INFO) << "[parse] " << ss.str();
     }
     catch (LexError e) {
-        LOG(FATAL) << e.loc.row << ':' << e.loc.col << ' ' << e.msg;
+        LOG(FATAL) << "[lex] " << e.loc.row << ':' << e.loc.col
+                   << ' ' << e.msg;
+    }
+    catch (ParseError e) {
+        LOG(FATAL) << "[parse] " << e.loc.row << ':' << e.loc.col
+                   << ' ' << e.msg;
     }
     catch (InternalCompilerError e) {
         LOG(FATAL) << e.msg;

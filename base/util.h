@@ -3,6 +3,11 @@
 #include <iostream>
 #include <sstream>
 
+struct InternalCompilerError {
+    std::string msg;
+    InternalCompilerError(std::string msg): msg(msg) {}
+};
+
 template <typename T>
 static void PrintToStream(std::ostream& os, const T& arg) {
     os << arg;

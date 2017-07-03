@@ -24,12 +24,12 @@ public:
 
     Token Get() {
         if (auto res = Peek()) {
-            buffer_.kind = kNothing;
+            buffer_ = Token();
             LOG(INFO) << "[lex] " << res.loc.row << ':' << res.loc.col
                       << ' ' << res;
             return res;
         } else {
-            throw LexError("Unexpected end of input",
+            throw LexError("Unexpected end of input.",
                            Location(is_.Row(), is_.Col()));
         }
     }
@@ -38,7 +38,7 @@ public:
         auto res = Get();
         if (res.kind != expected)
             throw LexError(BuildStr("Expected token \'", expected, "\'",
-                                    "; instead found \'", res, "\'"),
+                                    "; instead found \'", res, "\'."),
                            res.loc);
         return res;
     }
@@ -52,6 +52,10 @@ public:
 
     Token TryGet(TokenKind expected) {
         return TryGet([=](TokenKind kind) { return kind == expected; });
+    }
+
+    Location CurrLoc() const {
+        return buffer_ ? buffer_.loc : Location(is_.Row(), is_.Col());
     }
 
 private:
@@ -71,9 +75,9 @@ private:
 
         void SkipWhitespace();
 
-        int32_t Row() { return row_; }
+        int32_t Row() const { return row_; }
 
-        int32_t Col() { return col_; }
+        int32_t Col() const { return col_; }
 
     private:
         std::istream& is_;

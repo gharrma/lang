@@ -1,6 +1,6 @@
 #include <cassert>
 #include "base/logging.h"
-#include "main/error.h"
+#include "base/util.h"
 #include "parse/lex.h"
 
 namespace parse {
@@ -96,11 +96,15 @@ Token Lexer::GetToken() {
             }
         }
         catch (std::invalid_argument e) {
+            static const char* kMalformedIntLit = "Malformed integer literal.";
+            static const char* kMalformedFloatLit = "Malformed float literal.";
             auto msg = decimal ? kMalformedFloatLit : kMalformedIntLit;
             throw LexError(msg, GetLocation());
         }
         catch (std::out_of_range e) {
-            auto msg = decimal ? kFloatLitOutOfRange : kIntLitOutOfRange;
+            static const char* kIntLitRange = "Integer literal out of range.";
+            static const char* kFloatLitRange = "Float literal out of range.";
+            auto msg = decimal ? kFloatLitRange : kIntLitRange;
             throw LexError(msg, GetLocation());
         }
         return lit;
@@ -112,7 +116,7 @@ Token Lexer::GetToken() {
         case '(': case ')': case '{': case '}': case '[': case ']':
             return Token(static_cast<TokenKind>(ch), GetLocation());
         default:
-            throw LexError(BuildStr("Unexpected character \'", ch, "\'"),
+            throw LexError(BuildStr("Unexpected character \'", ch, "\'."),
                            GetLocation());
     }
 }
