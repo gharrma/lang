@@ -2,8 +2,8 @@
 #define AST_H
 #include <memory>
 #include <string>
-#include "parse/location.h"
-#include "parse/token.h"
+#include "location.h"
+#include "token.h"
 
 using std::unique_ptr;
 using std::move;

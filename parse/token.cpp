@@ -1,4 +1,4 @@
-#include "parse/token.h"
+#include "token.h"
 
 namespace parse {
 

@@ -1,7 +1,7 @@
 #ifndef TOKEN_H
 #define TOKEN_H
 #include <iostream>
-#include "parse/location.h"
+#include "location.h"
 
 namespace parse {
 

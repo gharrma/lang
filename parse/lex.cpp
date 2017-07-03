@@ -1,7 +1,8 @@
+#include "lex.h"
+
 #include <cassert>
 #include "base/logging.h"
 #include "base/util.h"
-#include "parse/lex.h"
 
 namespace parse {
 

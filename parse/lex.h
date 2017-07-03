@@ -2,7 +2,7 @@
 #define LEX_H
 #include "base/logging.h"
 #include "base/util.h"
-#include "parse/token.h"
+#include "token.h"
 
 namespace parse {
 
