@@ -47,11 +47,16 @@ TokenInfo token_info;
 
 std::ostream& operator<<(std::ostream& os, const Token& token) {
     switch (token.kind) {
-        case kId:       return os << token.str_val;
-        case kIntLit:   return os << token.int_val;
-        case kFloatLit: return os << token.float_val;
-        case kStrLit:   return os << token.str_val;
-        default:        return os << token.kind;
+        case kId:     return os << token.str_val;
+        case kIntLit: return os << token.int_val;
+        case kStrLit: return os << token.str_val;
+        case kFloatLit:
+            os << token.float_val;
+            if (token.float_val == static_cast<int64_t>(token.float_val))
+                os << ".0";
+            return os;
+        default:
+            return os << token.kind;
     }
 }
 

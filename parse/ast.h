@@ -17,8 +17,21 @@ struct Node {
     virtual void PrettyPrint(std::ostream& os) const = 0;
 };
 
+struct Number {
+    enum Kind { kNothing, kInt, kFloat };
+    Kind kind;
+    union { int64_t int_val; double float_val; };
+    Number(): kind(kNothing) {}
+    Number(int64_t val): kind(kInt), int_val(val) {}
+    Number(double val): kind(kFloat), float_val(val) {}
+    explicit operator bool() const { return kind != kNothing; }
+};
+
+std::ostream& operator<<(std::ostream& os, const Number& num);
+
 struct Expr : Node {
     Expr(Location loc): Node(loc) {}
+    virtual Number Eval() const { return Number(); };
 };
 
 struct Id : Expr {
@@ -36,13 +49,14 @@ struct Binary : Expr {
         , lhs(move(lhs))
         , rhs(move(rhs)) {}
     void PrettyPrint(std::ostream& os) const;
+    Number Eval() const;
 };
 
 struct Prefix : Expr {
     Token op;
     unique_ptr<Expr> expr;
     Prefix(Token op, unique_ptr<Expr> expr)
-        : Expr(op.loc), op(op), expr(move(expr)) {}
+        : Expr(Location(op.loc, expr->loc)), op(op), expr(move(expr)) {}
     void PrettyPrint(std::ostream& os) const;
 };
 
@@ -51,11 +65,14 @@ struct Lit : Expr {
     T val;
     Lit(Location loc, T val): Expr(loc), val(val) {}
     void PrettyPrint(std::ostream& os) const { os << val; };
+    Number Eval() const { return Number(val); }
 };
 
-// Custom pretty printing for float literals.
-template <>
-void Lit<double>::PrettyPrint(std::ostream& os) const;
+template <> // Custom pretty printing for float literals.
+void Lit<decltype(Token::float_val)>::PrettyPrint(std::ostream& os) const;
+
+template <> // Custom constant evalutation for string literals.
+Number Lit<decltype(Token::str_val)>::Eval() const;
 
 } // parse
 

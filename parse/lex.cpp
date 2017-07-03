@@ -90,7 +90,8 @@ Token Lexer::GetToken() {
                 lit = Token(kFloatLit, GetLocation(), val);
             } else {
                 auto val = std::stoull(str, &actual_len);
-                lit = Token(kIntLit, GetLocation(), val);
+                auto int_val = static_cast<decltype(Token::int_val)>(val);
+                lit = Token(kIntLit, GetLocation(), int_val);
             }
             if (lit.loc.end_col - lit.loc.col != actual_len) {
                 throw std::invalid_argument("Unexpected length");
