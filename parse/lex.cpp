@@ -111,7 +111,7 @@ Token Lexer::GetToken() {
     }
 
     switch (ch) {
-        case '.': case '=':
+        case '.': case '=': case ';':
         case '+': case '-': case '*': case '/': case '%':
         case '(': case ')': case '{': case '}': case '[': case ']':
             return Token(static_cast<TokenKind>(ch), GetLocation());

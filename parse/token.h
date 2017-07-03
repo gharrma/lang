@@ -16,8 +16,9 @@ enum TokenKind {
     kIf,
     kElse,
 
-    kDot = '.',
-    kEq  = '=',
+    kSemicolon = ';',
+    kDot       = '.',
+    kEq        = '=',
 
     kPlus  = '+',
     kMinus = '-',

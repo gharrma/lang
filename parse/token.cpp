@@ -13,6 +13,7 @@ std::ostream& operator<<(std::ostream& os, const TokenKind kind) {
         case kElse:     return os << "else";
         case kDot:
         case kEq:
+        case kSemicolon:
         case kPlus:
         case kMinus:
         case kTimes:

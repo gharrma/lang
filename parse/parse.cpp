@@ -24,7 +24,6 @@ unique_ptr<Expr> Parser::ParsePrimaryExpr() {
         return make_unique<Id>(token.loc, token.str_val);
     }
     if (auto token = lex_.TryGet(kLParen)) {
-        lex_.Get(kLParen);
         auto res = ParseExpr();
         lex_.Get(kRParen);
         return res;
