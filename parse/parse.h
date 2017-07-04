@@ -1,8 +1,9 @@
-#ifndef PARSE_H
-#define PARSE_H
+#ifndef PARSE_PARSE_H
+#define PARSE_PARSE_H
 #include <iostream>
 #include "ast.h"
 #include "lex.h"
+
 using std::unique_ptr;
 
 namespace parse {
@@ -20,12 +21,6 @@ private:
     Lexer& lex_;
 };
 
-struct ParseError {
-    std::string msg;
-    Location loc;
-    ParseError(std::string msg, Location loc): msg(msg), loc(loc) {}
-};
-
 } // namespace parse
 
-#endif // PARSE_H
+#endif // PARSE_PARSE_H

@@ -1,5 +1,5 @@
-#ifndef AST_H
-#define AST_H
+#ifndef PARSE_AST_H
+#define PARSE_AST_H
 #include <memory>
 #include <string>
 #include "location.h"
@@ -76,4 +76,4 @@ Number Lit<decltype(Token::str_val)>::Eval() const;
 
 } // parse
 
-#endif // AST_H
+#endif // PARSE_AST_H

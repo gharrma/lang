@@ -1,44 +1,39 @@
-#ifndef LEX_H
-#define LEX_H
+#ifndef PARSE_LEX_H
+#define PARSE_LEX_H
 #include "base/logging.h"
 #include "base/util.h"
+#include "main/error.h"
 #include "token.h"
 
 namespace parse {
 
-struct LexError {
-    std::string msg;
-    Location loc;
-    LexError(std::string msg, Location loc): msg(msg), loc(loc) {}
-};
-
 class PositionedStream {
-    public:
-        PositionedStream(std::istream& is): is_(is) {}
+public:
+    PositionedStream(std::istream& is): is_(is) {}
 
-        char Peek();
+    char Peek();
 
-        char Get();
+    char Get();
 
-        template <typename Pred>
-        char Get(Pred pred);
+    template <typename Pred>
+    char Get(Pred pred);
 
-        template <typename Pred>
-        size_t GetWhile(std::string& str, Pred pred);
+    template <typename Pred>
+    size_t GetWhile(std::string& str, Pred pred);
 
-        void SkipWhitespace();
+    void SkipWhitespace();
 
-        void SkipLine() { char ch; while ((ch = Get()) && ch != '\n'); }
+    void SkipLine() { char ch; while ((ch = Get()) && ch != '\n'); }
 
-        int32_t Row() const { return row_; }
+    int32_t Row() const { return row_; }
 
-        int32_t Col() const { return col_; }
+    int32_t Col() const { return col_; }
 
-    private:
-        std::istream& is_;
-        char buffer_ = '\0';
-        int32_t row_ = 1, col_ = 1;
-    };
+private:
+    std::istream& is_;
+    char buffer_ = '\0';
+    int32_t row_ = 1, col_ = 1;
+};
 
 class Lexer {
 public:
@@ -65,9 +60,8 @@ public:
     Token Get(TokenKind expected) {
         auto res = Get();
         if (res.kind != expected)
-            throw LexError(BuildStr("Expected token \'", expected, "\'",
-                                    "; instead found \'", res, "\'."),
-                           res.loc);
+            throw ParseError(BuildStr("Unexpected token \'", res, "\'."),
+                             res.loc);
         return res;
     }
 
@@ -99,4 +93,4 @@ private:
 
 } // namespace parse
 
-#endif // LEX_H
+#endif // PARSE_LEX_H

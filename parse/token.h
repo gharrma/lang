@@ -1,5 +1,5 @@
-#ifndef TOKEN_H
-#define TOKEN_H
+#ifndef PARSE_TOKEN_H
+#define PARSE_TOKEN_H
 #include <iostream>
 #include "location.h"
 
@@ -74,4 +74,4 @@ std::ostream& operator<<(std::ostream& os, const Token& token);
 
 } // namespace parse
 
-#endif // TOKEN_H
+#endif // PARSE_TOKEN_H

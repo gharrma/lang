@@ -1,6 +1,8 @@
 #include "parse.h"
 
 #include <unordered_map>
+#include "main/error.h"
+
 using std::make_unique;
 using std::move;
 
@@ -60,11 +62,9 @@ void Parser::Expected(std::string expectation) {
         }
     } else {
         if (next) {
-            msg = BuildStr("Expected ", expectation,
-                           "; instead found \'", next, "\'.");
+            msg = BuildStr("Unexpected token \'", next, "\'.");
         } else {
-            msg = BuildStr("Expected ", expectation,
-                           "; instead found end of input.");
+            msg = BuildStr("Expected ", expectation, '.');
         }
     }
     throw ParseError(msg, loc);
