@@ -3,9 +3,7 @@
 #include <iostream>
 #include "base/logging.h"
 #include "base/util.h"
-#include "typecheck/types.h"
-
-using typecheck::TypeError;
+#include "main/error.h"
 
 namespace parse {
 

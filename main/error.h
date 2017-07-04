@@ -21,4 +21,10 @@ struct ParseError {
     ParseError(std::string msg, Location loc): msg(msg), loc(loc) {}
 };
 
+struct TypeError {
+    std::string msg;
+    Location loc;
+    TypeError(std::string msg, Location loc): msg(msg), loc(loc) {}
+};
+
 #endif // MAIN_ERROR_H
