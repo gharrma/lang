@@ -62,7 +62,7 @@ Number Binary::Eval() const {
 void Prefix::PrettyPrint(std::ostream& os) const {
     os << op;
     expr->PrettyPrint(os);
-};
+}
 
 template <>
 void Lit<double>::PrettyPrint(std::ostream& os) const {

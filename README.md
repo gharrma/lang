@@ -42,3 +42,15 @@ c> 1. + 2. + x;
 c> 1 + 2 + 3);
 3:10 [lex] Expected token ';'; instead found ')'.
 ```
+
+Style Guide
+-----------
+
+For simplicity we use the [Google C++ Style Guide](https://google.github.io/styleguide/cppguide.html), though only loosely.
+
+
+Contributing
+------------
+
+Any contributions are welcome! Make a pull request
+or reach out to me at gharrma@gmail.com, and we'll make something happen.
