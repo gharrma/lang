@@ -5,6 +5,13 @@
 #include "parse/parse.h"
 #include "typecheck/types.h"
 
+#define PROCESS_ERROR(kind) \
+    do { \
+        std::cerr << e.loc.row << ':' << e.loc.col << " [" #kind "] " \
+                  << e.msg << std::endl; \
+        lexer.SkipLine(); \
+    } while (0)
+
 int main() {
     using namespace parse;
     using namespace typecheck;
@@ -21,18 +28,9 @@ int main() {
             auto value = expr->Eval();
             std::cout << "[value] " << value << std::endl;
         }
-        catch (LexError e) {
-            std::cerr << e.loc.row << ':' << e.loc.col << " [lex] "
-                      << e.msg << std::endl;
-        }
-        catch (ParseError e) {
-            std::cerr << e.loc.row << ':' << e.loc.col << " [parse] "
-                      << e.msg << std::endl;
-        }
-        catch (TypeError e) {
-            std::cerr << e.loc.row << ':' << e.loc.col << " [typecheck] "
-                      << e.msg << std::endl;
-        }
+        catch (LexError e)   { PROCESS_ERROR(lex); }
+        catch (ParseError e) { PROCESS_ERROR(parse); }
+        catch (TypeError e)  { PROCESS_ERROR(typecheck); }
         catch (InternalCompilerError e) {
             LOG(FATAL) << e.msg;
         }

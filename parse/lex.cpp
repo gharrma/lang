@@ -16,26 +16,26 @@ static bool IsIdMiddle(char c) {
 // Floats: [0-9]+[.]?[0-9]*
 static bool IsNumChar(char c) { return isdigit(c) || c == '.'; }
 
-char Lexer::PositionedStream::Peek() {
-    if (!next_)
-        if (!is_.get(next_))
-            next_ = '\0';
-    return next_;
+char PositionedStream::Peek() {
+    if (!buffer_)
+        if (!is_.get(buffer_))
+            buffer_ = '\0';
+    return buffer_;
 }
 
-char Lexer::PositionedStream::Get() {
-    if (!next_)
-        if (!is_.get(next_))
-            next_ = '\0';
-    auto res = next_;
-    next_ = '\0';
+char PositionedStream::Get() {
+    if (!buffer_)
+        if (!is_.get(buffer_))
+            buffer_ = '\0';
+    auto res = buffer_;
+    buffer_ = '\0';
     if (res == '\n') ++row_, col_ = 1;
     else if (res) ++col_;
     return res;
 }
 
 template <typename Pred>
-char Lexer::PositionedStream::Get(Pred pred) {
+char PositionedStream::Get(Pred pred) {
     auto ch = Peek();
     if (ch && pred(ch)) {
         auto res = Get();
@@ -47,14 +47,14 @@ char Lexer::PositionedStream::Get(Pred pred) {
 }
 
 template <typename Pred>
-size_t Lexer::PositionedStream::GetWhile(std::string& str, Pred pred) {
+size_t PositionedStream::GetWhile(std::string& str, Pred pred) {
     size_t count = 0;
     while (auto ch = Get(pred))
         str += ch, ++count;
     return count;
 }
 
-void Lexer::PositionedStream::SkipWhitespace() {
+void PositionedStream::SkipWhitespace() {
     while (Get([](char ch) { return isspace(ch); }));
 }
 

@@ -12,6 +12,34 @@ struct LexError {
     LexError(std::string msg, Location loc): msg(msg), loc(loc) {}
 };
 
+class PositionedStream {
+    public:
+        PositionedStream(std::istream& is): is_(is) {}
+
+        char Peek();
+
+        char Get();
+
+        template <typename Pred>
+        char Get(Pred pred);
+
+        template <typename Pred>
+        size_t GetWhile(std::string& str, Pred pred);
+
+        void SkipWhitespace();
+
+        void SkipLine() { char ch; while ((ch = Get()) && ch != '\n'); }
+
+        int32_t Row() const { return row_; }
+
+        int32_t Col() const { return col_; }
+
+    private:
+        std::istream& is_;
+        char buffer_ = '\0';
+        int32_t row_ = 1, col_ = 1;
+    };
+
 class Lexer {
 public:
     Lexer(std::istream& is): is_(is >> std::noskipws) {}
@@ -54,36 +82,13 @@ public:
         return TryGet([=](TokenKind kind) { return kind == expected; });
     }
 
+    void SkipLine() { is_.SkipLine(); buffer_ = Token(); }
+
     Location CurrLoc() const {
         return buffer_ ? buffer_.loc : Location(is_.Row(), is_.Col());
     }
 
 private:
-    class PositionedStream {
-    public:
-        PositionedStream(std::istream& is): is_(is) {}
-
-        char Peek();
-
-        char Get();
-
-        template <typename Pred>
-        char Get(Pred pred);
-
-        template <typename Pred>
-        size_t GetWhile(std::string& str, Pred pred);
-
-        void SkipWhitespace();
-
-        int32_t Row() const { return row_; }
-
-        int32_t Col() const { return col_; }
-
-    private:
-        std::istream& is_;
-        char next_ = '\0';
-        int32_t row_ = 1, col_ = 1;
-    };
 
     // This is where the language-specific magic happens.
     Token GetToken();
