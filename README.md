@@ -1,25 +1,26 @@
 gharrma/lang
 ============
 
-A programming language built from scratch to experiment with language features, static analyses, and LLVM.
+A programming language built from scratch to experiment with language features,
+static analyses, and LLVM.
 
 
 Quick Start Guide
 -----------------
 
+The compiler should build with any C++ compiler supporting C++14 features;
+I am using Clang.
+
+You will also need LLVM, which you can often get through a package
+packager (e.g., `brew install llvm`). Verify that `llvm-config --version`
+outputs something close to `4.0.1`.
+
+A simple Makefile builds the compiler.
+
 ```
 $ git clone https://github.com/gharrma/lang.git
 $ cd lang
 $ make
-```
-
-The compiler should build with any C++ compiler supporting C++14 features.
-But just in case, here's my current output for `g++ --version`.
-
-```
-Apple LLVM version 8.0.0 (clang-800.0.42.1)
-Target: x86_64-apple-darwin15.6.0
-Thread model: posix
 ```
 
 
@@ -46,7 +47,9 @@ c> 1 + 2 + 3);
 Style Guide
 -----------
 
-For simplicity we use the [Google C++ Style Guide](https://google.github.io/styleguide/cppguide.html), though only loosely.
+For simplicity we use the
+[Google C++ Style Guide](https://google.github.io/styleguide/cppguide.html),
+though only loosely.
 
 
 Contributing

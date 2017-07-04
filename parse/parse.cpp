@@ -1,9 +1,10 @@
 #include "parse.h"
 
 #include <unordered_map>
+#include "llvm/ADT/STLExtras.h"
 #include "main/error.h"
 
-using std::make_unique;
+using llvm::make_unique;
 using std::move;
 
 namespace parse {

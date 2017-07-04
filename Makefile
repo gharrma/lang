@@ -1,5 +1,6 @@
-CXX = g++
-CXXFLAGS = -std=c++14 -Wall -MMD -I.
+CXX = clang++
+CXXFLAGS = `llvm-config --cxxflags` -Wall -MMD -I.
+LDFLAGS = `llvm-config --ldflags`
 
 SRC = $(shell find . -name "*.cpp")
 OBJ = $(SRC:.cpp=.o)
@@ -14,7 +15,7 @@ release: CXXFLAGS += -O3 -DNDEBUG -Werror
 release: c
 
 c: $(OBJ)
-	$(CXX) -o $@ $^
+	$(CXX) $(LDFLAGS) -o $@ $^
 
 %.o: %.cpp
 	$(CXX) $(CXXFLAGS) -c -o $@ $<

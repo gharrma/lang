@@ -61,9 +61,9 @@ void PositionedStream::SkipWhitespace() {
 Token Lexer::GetToken() {
     is_.SkipWhitespace();
 
-    auto GetLocation = [start_row = is_.Row(),
-                        start_col = is_.Col(),
-                        this]() {
+    auto start_row = is_.Row();
+    auto start_col = is_.Col();
+    auto GetLocation = [start_row, start_col, this]() {
         return Location(start_row, start_col, is_.Row(), is_.Col());
     };
 
@@ -93,7 +93,8 @@ Token Lexer::GetToken() {
                 auto int_val = static_cast<decltype(Token::int_val)>(val);
                 lit = Token(kIntLit, GetLocation(), int_val);
             }
-            if (lit.loc.end_col - lit.loc.col != actual_len) {
+            auto len = static_cast<size_t>(lit.loc.end_col - lit.loc.col);
+            if (len != actual_len) {
                 throw std::invalid_argument("Unexpected length");
             }
         }
