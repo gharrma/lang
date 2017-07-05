@@ -1,11 +1,9 @@
-#ifndef PARSE_LEX_H
-#define PARSE_LEX_H
-#include "base/logging.h"
-#include "base/util.h"
-#include "main/error.h"
-#include "token.h"
+#ifndef LEX_H
+#define LEX_H
 
-namespace parse {
+#include "util.h"
+#include "error.h"
+#include "token.h"
 
 class PositionedStream {
 public:
@@ -83,7 +81,6 @@ public:
     }
 
 private:
-
     // This is where the language-specific magic happens.
     Token GetToken();
 
@@ -91,6 +88,4 @@ private:
     Token buffer_;
 };
 
-} // namespace parse
-
-#endif // PARSE_LEX_H
+#endif // LEX_H

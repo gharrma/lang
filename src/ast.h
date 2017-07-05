@@ -1,14 +1,10 @@
-#ifndef PARSE_AST_H
-#define PARSE_AST_H
+#ifndef AST_H
+#define AST_H
+
 #include <memory>
 #include <string>
 #include "location.h"
 #include "token.h"
-
-using std::unique_ptr;
-using std::move;
-
-namespace parse {
 
 struct Node {
     Location loc;
@@ -42,21 +38,21 @@ struct Id : Expr {
 
 struct Binary : Expr {
     Token op;
-    unique_ptr<Expr> lhs, rhs;
-    Binary(Token op, unique_ptr<Expr> lhs, unique_ptr<Expr> rhs)
+    std::unique_ptr<Expr> lhs, rhs;
+    Binary(Token op, std::unique_ptr<Expr> lhs, std::unique_ptr<Expr> rhs)
         : Expr(Location(lhs->loc, rhs->loc))
         , op(op)
-        , lhs(move(lhs))
-        , rhs(move(rhs)) {}
+        , lhs(std::move(lhs))
+        , rhs(std::move(rhs)) {}
     void PrettyPrint(std::ostream& os) const;
     Number Eval() const;
 };
 
 struct Prefix : Expr {
     Token op;
-    unique_ptr<Expr> expr;
-    Prefix(Token op, unique_ptr<Expr> expr)
-        : Expr(Location(op.loc, expr->loc)), op(op), expr(move(expr)) {}
+    std::unique_ptr<Expr> expr;
+    Prefix(Token op, std::unique_ptr<Expr> expr)
+        : Expr(Location(op.loc, expr->loc)), op(op), expr(std::move(expr)) {}
     void PrettyPrint(std::ostream& os) const;
 };
 
@@ -74,6 +70,4 @@ void Lit<decltype(Token::float_val)>::PrettyPrint(std::ostream& os) const;
 template <> // Custom constant evalutation for string literals.
 Number Lit<decltype(Token::str_val)>::Eval() const;
 
-} // parse
-
-#endif // PARSE_AST_H
+#endif // AST_H

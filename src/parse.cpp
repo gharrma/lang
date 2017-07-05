@@ -1,32 +1,27 @@
 #include "parse.h"
 
 #include <unordered_map>
+#include "error.h"
 #include "llvm/ADT/STLExtras.h"
-#include "main/error.h"
 
-using llvm::make_unique;
-using std::move;
-
-namespace parse {
-
-unique_ptr<Expr> Parser::ParseExpr() {
+std::unique_ptr<Expr> Parser::ParseExpr() {
     auto lhs = ParsePrimaryExpr();
-    auto res = ParseSecondaryExpr(move(lhs), 1);
+    auto res = ParseSecondaryExpr(std::move(lhs), 1);
     return res;
 }
 
 #define TRY_PARSE_LIT(kind, rep) \
     do if (auto token = lex_.TryGet(kind)) { \
         using Rep = decltype(token.rep); \
-        return make_unique<Lit<Rep>>(token.loc, token.rep); \
+        return llvm::make_unique<Lit<Rep>>(token.loc, token.rep); \
     } while (0);
 
-unique_ptr<Expr> Parser::ParsePrimaryExpr() {
+std::unique_ptr<Expr> Parser::ParsePrimaryExpr() {
     TRY_PARSE_LIT(kIntLit, int_val);
     TRY_PARSE_LIT(kFloatLit, float_val);
     TRY_PARSE_LIT(kStrLit, str_val);
     if (auto token = lex_.TryGet(kId)) {
-        return make_unique<Id>(token.loc, token.str_val);
+        return llvm::make_unique<Id>(token.loc, token.str_val);
     }
     if (auto token = lex_.TryGet(kLParen)) {
         auto res = ParseExpr();
@@ -36,8 +31,8 @@ unique_ptr<Expr> Parser::ParsePrimaryExpr() {
     Expected("primary expression");
 }
 
-unique_ptr<Expr> Parser::ParseSecondaryExpr(unique_ptr<Expr> lhs,
-                                            int32_t min_prec) {
+std::unique_ptr<Expr> Parser::ParseSecondaryExpr(std::unique_ptr<Expr> lhs,
+                                                  int32_t min_prec) {
     while (true) {
         Token op = lex_.TryGet([min_prec](TokenKind kind) {
             return token_info.prec[kind] >= min_prec;
@@ -46,8 +41,8 @@ unique_ptr<Expr> Parser::ParseSecondaryExpr(unique_ptr<Expr> lhs,
         auto op_prec = token_info.prec[op.kind];
         auto rhs = ParsePrimaryExpr();
         if (token_info.prec[lex_.Peek().kind] > op_prec)
-            rhs = ParseSecondaryExpr(move(rhs), op_prec + 1);
-        lhs = make_unique<Binary>(op, move(lhs), move(rhs));
+            rhs = ParseSecondaryExpr(std::move(rhs), op_prec + 1);
+        lhs = llvm::make_unique<Binary>(op, std::move(lhs), std::move(rhs));
     }
 }
 
@@ -70,5 +65,3 @@ void Parser::Expected(std::string expectation) {
     }
     throw ParseError(msg, loc);
 }
-
-} // namespace parse

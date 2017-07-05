@@ -1,10 +1,6 @@
 #include "lex.h"
-
 #include <cassert>
-#include "base/logging.h"
-#include "base/util.h"
-
-namespace parse {
+#include "util.h"
 
 // Identifiers: [a-zA-Z][a-zA-Z0-9_']*
 static bool IsIdStart(char c) { return isalpha(c); }
@@ -123,5 +119,3 @@ Token Lexer::GetToken() {
                            GetLocation());
     }
 }
-
-} // namespace parse

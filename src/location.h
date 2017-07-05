@@ -1,8 +1,7 @@
 #ifndef LOCATION_H
 #define LOCATION_H
-#include <cassert>
 
-namespace parse {
+#include <cassert>
 
 struct Location {
     int32_t row, col, end_row, end_col;
@@ -22,7 +21,5 @@ struct Location {
 
     Location(): Location(-1, -1, -1, -1) {}
 };
-
-} // namespace parse
 
 #endif // LOCATION_H

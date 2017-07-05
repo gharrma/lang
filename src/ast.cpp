@@ -1,11 +1,8 @@
 #include "ast.h"
 
 #include <iostream>
-#include "base/logging.h"
-#include "base/util.h"
-#include "main/error.h"
-
-namespace parse {
+#include "error.h"
+#include "util.h"
 
 std::ostream& operator<<(std::ostream& os, const Number& num) {
     switch (num.kind) {
@@ -72,5 +69,3 @@ void Lit<double>::PrettyPrint(std::ostream& os) const {
 
 template <>
 Number Lit<decltype(Token::str_val)>::Eval() const { return Number(); }
-
-} // namespace parse

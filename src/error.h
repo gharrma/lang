@@ -1,8 +1,7 @@
-#ifndef MAIN_ERROR_H
-#define MAIN_ERROR_H
-#include "parse/location.h"
+#ifndef ERROR_H
+#define ERROR_H
 
-using parse::Location;
+#include "location.h"
 
 struct InternalCompilerError {
     std::string msg;
@@ -27,4 +26,4 @@ struct TypeError {
     TypeError(std::string msg, Location loc): msg(msg), loc(loc) {}
 };
 
-#endif // MAIN_ERROR_H
+#endif // ERROR_H

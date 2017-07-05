@@ -1,9 +1,8 @@
-#ifndef PARSE_TOKEN_H
-#define PARSE_TOKEN_H
+#ifndef TOKEN_H
+#define TOKEN_H
+
 #include <iostream>
 #include "location.h"
-
-namespace parse {
 
 enum TokenKind {
     kNothing = 0,
@@ -72,6 +71,4 @@ struct Token {
 
 std::ostream& operator<<(std::ostream& os, const Token& token);
 
-} // namespace parse
-
-#endif // PARSE_TOKEN_H
+#endif // TOKEN_H

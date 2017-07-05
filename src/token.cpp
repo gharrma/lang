@@ -1,7 +1,5 @@
 #include "token.h"
 
-namespace parse {
-
 std::ostream& operator<<(std::ostream& os, const TokenKind kind) {
     switch (kind) {
         case kNothing:  return os << "invalid";
@@ -59,5 +57,3 @@ std::ostream& operator<<(std::ostream& os, const Token& token) {
             return os << token.kind;
     }
 }
-
-} // namespace parse

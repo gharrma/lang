@@ -1,10 +1,8 @@
 #include <iostream>
 #include <fstream>
-#include "base/logging.h"
-#include "base/util.h"
-#include "parse/lex.h"
-#include "parse/parse.h"
-#include "typecheck/types.h"
+#include "util.h"
+#include "lex.h"
+#include "parse.h"
 
 #define FILE_ERROR(kind) \
     do { \
@@ -21,9 +19,6 @@
     } while (0)
 
 int main(int argc, char* argv[]) {
-    using namespace parse;
-    using namespace typecheck;
-
     if (argc > 1) {
         // Read from files.
         int i = 1;
@@ -52,7 +47,7 @@ int main(int argc, char* argv[]) {
             try {
                 std::cout << "c> ";
                 auto expr = parser.ParseExpr();
-                lexer.Get(parse::kSemicolon);
+                lexer.Get(kSemicolon);
                 std::cout << "[parse] ";
                 expr->PrettyPrint(std::cout);
                 std::cout << std::endl;
