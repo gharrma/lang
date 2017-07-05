@@ -8,12 +8,9 @@ static analyses, and LLVM.
 Quick Start Guide
 -----------------
 
-The compiler should build with any C++ compiler supporting C++14 features;
-I am using Clang.
-
-You will also need LLVM, which you can often get through a package
+You will need LLVM, which you can often get through a package
 packager (e.g., `brew install llvm`). Verify that `llvm-config --version`
-outputs something close to `4.0.1`.
+outputs something close to `4.0.0`.
 
 A simple Makefile builds the compiler.
 
