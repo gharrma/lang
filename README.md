@@ -8,17 +8,26 @@ static analyses, and LLVM.
 Quick Start Guide
 -----------------
 
-You will need LLVM, which you can often get through a package
-packager (e.g., `brew install llvm`). Verify that `llvm-config --version`
-outputs something close to `4.0.0`.
+You will need [LLVM](http://llvm.org) (e.g., `brew install llvm`).
+Verify that `llvm-config --version` outputs something close to `4.0.0`.
 
-A simple Makefile builds the compiler.
+You will also need [CMake](https://cmake.org) (e.g., `brew install cmake`). Version `3.7` should suffice.
 
 ```
 $ git clone https://github.com/gharrma/lang.git
 $ cd lang
-$ make
+$ mkdir build && cd build
+$ cmake .. && make
 ```
+
+If you prefer [Ninja](https://ninja-build.org) over Unix makefiles
+(recommended), you can instead run
+```
+cmake -G Ninja .. && ninja
+```
+
+If you would like a debug build rather than a release build, use
+the `-DCMAKE_BUILD_TYPE=Debug` flag for `cmake`.
 
 
 REPL
@@ -29,16 +38,12 @@ evaluates expressions as you type them. Use a semicolon to tell the REPL
 you are finished typing an expression. Below is example usage.
 
 ```
-$ make clean && make release
-$ ./c
+$ cd build && ./c
 c> 1 + 2 * 3 * (4 + 5) * 6;
 [parse] (1 + (((2 * 3) * (4 + 5)) * 6))
-[value] 325
-c> 1. + 2. + x;
-[parse] ((1.0 + 2.0) + x)
-[value] unknown
+[value] i64 325
 c> 1 + 2 + 3);
-3:10 [lex] Expected token ';'; instead found ')'.
+2:10 [parse] Unexpected token ')'.
 ```
 
 Style Guide

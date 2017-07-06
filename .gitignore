@@ -1,5 +1,5 @@
-c
-*.d
-*.o
 ideas.md
 todo.md
+debug/
+release/
+build/
