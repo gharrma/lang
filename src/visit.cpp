@@ -1,7 +1,5 @@
 #include "visit.h"
 
-#include "ast.h"
-
 void Id::Accept(Visitor& v) {
     v.BeforeId(this);
     v.AfterId(this);

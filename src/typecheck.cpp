@@ -6,7 +6,14 @@
 #include "util.h"
 #include "visit.h"
 
+using std::shared_ptr;
 using std::make_shared;
+
+static TypeError Expected(const Type& expected, const Type& actual, Loc loc) {
+    return TypeError(
+        BuildStr("Expected type ", expected, ", instead found ", actual),
+        loc);
+}
 
 struct TypeVisitor : Visitor {
     std::unordered_map<std::string, VarDecl*> context; // TODO: Scoping.
@@ -19,12 +26,13 @@ struct TypeVisitor : Visitor {
     void AfterParsedType(ParsedType* type) override;
     void AfterVarDecl(VarDecl* decl) override;
     void AfterFnProto(FnProto* proto) override;
+    void AfterFnDecl(FnDecl* fn) override;
 };
 
 void TypeVisitor::AfterId(Id* id) {
     auto it = context.find(id->name.str_val);
     if (it == context.end()) {
-        errors.emplace_back(BuildStr("Undeclared variable ", id->name),
+        errors.emplace_back(BuildStr("Undeclared variable \'", id->name, '\''),
                             id->loc);
         return;
     }
@@ -51,31 +59,38 @@ void TypeVisitor::AfterIntLit(IntLit* int_lit) {
 }
 
 void TypeVisitor::AfterFloatLit(FloatLit* float_lit) {
-    float_lit->type =  make_shared<FloatType>(64);
+    float_lit->type = make_shared<FloatType>(64);
 }
 
 void TypeVisitor::AfterParsedType(ParsedType* type) {
     if (type->type) return; // Pre-filled, probably as Unit.
 
     auto str = type->name.str_val;
-    if (str == "i8")  type->type = make_shared<IntType>(8,  /*signed*/ true);
-    if (str == "i16") type->type = make_shared<IntType>(16, /*signed*/ true);
-    if (str == "i32") type->type = make_shared<IntType>(32, /*signed*/ true);
-    if (str == "i64") type->type = make_shared<IntType>(64, /*signed*/ true);
+    uint8_t bits = 0;
+    bool signd = true;
 
-    if (str == "u8")  type->type = make_shared<IntType>(8,  /*signed*/ false);
-    if (str == "u16") type->type = make_shared<IntType>(16, /*signed*/ false);
-    if (str == "u32") type->type = make_shared<IntType>(32, /*signed*/ false);
-    if (str == "u64") type->type = make_shared<IntType>(64, /*signed*/ false);
+    if (str == "i8")  bits = 8u;
+    if (str == "i16") bits = 16u;
+    if (str == "i32") bits = 32u;
+    if (str == "i64") bits = 64u;
 
-    errors.emplace_back("Unrecognized type", type->loc);
+    if (str == "u8")  bits = 8u,  signd = false;
+    if (str == "u16") bits = 16u, signd = false;
+    if (str == "u32") bits = 32u, signd = false;
+    if (str == "u64") bits = 64u, signd = false;
+
+    if (bits) {
+        type->type = make_shared<IntType>(bits, signd);
+    } else {
+        errors.emplace_back("Unrecognized type", type->loc);
+    }
 }
 
 void TypeVisitor::AfterVarDecl(VarDecl* decl) {
     auto prev = context.find(decl->name.str_val);
     if (prev != context.end()) {
         errors.emplace_back(
-            BuildStr("Variable ", decl->name, " already declared at ",
+            BuildStr("Variable \'", decl->name, "\' already declared at ",
                      prev->second->name.loc),
             decl->loc);
         return;
@@ -85,7 +100,20 @@ void TypeVisitor::AfterVarDecl(VarDecl* decl) {
 
 // TODO: Recursion.
 void TypeVisitor::AfterFnProto(FnProto* proto) {
-    // TODO: Implement function types.
+    std::vector<shared_ptr<Type>> arg_types(proto->args.size());
+    for (size_t i = 0; i < arg_types.size(); ++i)
+        arg_types[i] = proto->args[i]->parsed_type->type;
+    auto ret_type = proto->ret_type->type;
+    proto->fn_type = make_shared<FnType>(arg_types, ret_type);
+}
+
+void TypeVisitor::AfterFnDecl(FnDecl* fn) {
+    if (!fn->body->type->Equals(fn->proto->fn_type->ret_type.get())) {
+        errors.push_back(Expected(*fn->proto->fn_type->ret_type,
+                                  *fn->body->type,
+                                  fn->body->loc));
+        return;
+    }
 }
 
 std::vector<TypeError> TypeCheck(Node& ast) {

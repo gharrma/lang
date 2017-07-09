@@ -47,12 +47,16 @@ int main(int argc, char* argv[]) {
                 while (lexer.Peek()) {
                     auto ast = parser.ParseTopLevelConstruct();
                     std::cout << *ast << std::endl;
+                    auto type_errors = TypeCheck(*ast);
+                    for (const auto& e : type_errors)
+                        FILE_ERROR(typecheck);
+                    if (!type_errors.empty())
+                        continue;
                 }
             }
         }
         catch (const LexError& e)   { FILE_ERROR(lex); }
         catch (const ParseError& e) { FILE_ERROR(parse); }
-        catch (const TypeError& e)  { FILE_ERROR(typecheck); }
     }
     else {
         // REPL.

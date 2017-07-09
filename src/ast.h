@@ -95,7 +95,7 @@ struct VarDecl : Node {
 struct FnProto : Node {
     std::vector<std::unique_ptr<VarDecl>> args;
     std::unique_ptr<ParsedType> ret_type;
-    std::shared_ptr<Type> fn_type;
+    std::shared_ptr<FnType> fn_type;
     FnProto(Loc start_loc,
             std::vector<std::unique_ptr<VarDecl>> args,
             std::unique_ptr<ParsedType> ret_type)
