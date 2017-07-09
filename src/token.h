@@ -1,6 +1,4 @@
-#ifndef TOKEN_H
-#define TOKEN_H
-
+#pragma once
 #include <iostream>
 #include "location.h"
 
@@ -45,30 +43,28 @@ extern TokenInfo token_info;
 
 struct Token {
     TokenKind kind;
-    Location loc;
+    Loc loc;
     union {
-        int64_t int_val;
+        uint64_t int_val;
         double float_val;
     };
     std::string str_val;
 
-    Token(): Token(kNothing, Location()) {}
+    Token(): Token(kNothing, Loc()) {}
 
-    Token(TokenKind kind, Location loc)
+    Token(TokenKind kind, Loc loc)
         : kind(kind), loc(loc) {}
 
-    Token(TokenKind kind, Location loc, int64_t val)
+    Token(TokenKind kind, Loc loc, decltype(int_val) val)
         : kind(kind), loc(loc), int_val(val) {}
 
-    Token(TokenKind kind, Location loc, double val)
+    Token(TokenKind kind, Loc loc, decltype(float_val) val)
         : kind(kind), loc(loc), float_val(val) {}
 
-    Token(TokenKind kind, Location loc, std::string val)
+    Token(TokenKind kind, Loc loc, std::string val)
         : kind(kind), loc(loc), str_val(val) {}
 
     explicit operator bool() const { return kind != kNothing; }
 };
 
 std::ostream& operator<<(std::ostream& os, const Token& token);
-
-#endif // TOKEN_H

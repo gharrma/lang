@@ -1,73 +1,68 @@
-#ifndef AST_H
-#define AST_H
-
+#pragma once
 #include <memory>
 #include <string>
+#include <iostream>
+#include "llvm/IR/Value.h"
 #include "location.h"
 #include "token.h"
+#include "type.h"
+
+struct EmitContext; // TODO: Consider turning into visitor.
+class Visitor;
 
 struct Node {
-    Location loc;
-    Node(Location loc): loc(loc) {}
+    Loc loc;
+    std::shared_ptr<Type> type;
+    Node(Loc loc): loc(loc) {}
     virtual ~Node() {}
-    virtual void PrettyPrint(std::ostream& os) const = 0;
+    virtual void Print(std::ostream& os) const = 0;
+    virtual void Accept(Visitor& v) = 0; // See visit.cpp.
 };
 
-struct Number {
-    enum Kind { kNothing, kInt, kFloat };
-    Kind kind;
-    union { int64_t int_val; double float_val; };
-    Number(): kind(kNothing) {}
-    Number(int64_t val): kind(kInt), int_val(val) {}
-    Number(double val): kind(kFloat), float_val(val) {}
-    explicit operator bool() const { return kind != kNothing; }
-};
-
-std::ostream& operator<<(std::ostream& os, const Number& num);
+std::ostream& operator<<(std::ostream& os, const Node& node);
 
 struct Expr : Node {
-    Expr(Location loc): Node(loc) {}
-    virtual Number Eval() const { return Number(); };
+    Expr(Loc loc): Node(loc) {}
+    virtual llvm::Value* Emit(EmitContext& v) const = 0; // See emit.cpp.
 };
 
 struct Id : Expr {
     std::string name;
-    Id(Location loc, std::string name): Expr(loc), name(name) {}
-    void PrettyPrint(std::ostream& os) const { os << name; }
+    Id(Loc loc, std::string name): Expr(loc), name(name) {}
+    void Print(std::ostream& os) const override { os << name; }
+    void Accept(Visitor& v) override;
+    llvm::Value* Emit(EmitContext& v) const override { return nullptr; }
 };
 
 struct Binary : Expr {
     Token op;
     std::unique_ptr<Expr> lhs, rhs;
     Binary(Token op, std::unique_ptr<Expr> lhs, std::unique_ptr<Expr> rhs)
-        : Expr(Location(lhs->loc, rhs->loc))
+        : Expr(Loc(lhs->loc, rhs->loc))
         , op(op)
         , lhs(std::move(lhs))
         , rhs(std::move(rhs)) {}
-    void PrettyPrint(std::ostream& os) const;
-    Number Eval() const;
+    void Print(std::ostream& os) const override;
+    void Accept(Visitor& v) override;
+    llvm::Value* Emit(EmitContext& v) const override;
 };
 
-struct Prefix : Expr {
-    Token op;
-    std::unique_ptr<Expr> expr;
-    Prefix(Token op, std::unique_ptr<Expr> expr)
-        : Expr(Location(op.loc, expr->loc)), op(op), expr(std::move(expr)) {}
-    void PrettyPrint(std::ostream& os) const;
-};
-
-template <typename T>
 struct Lit : Expr {
-    T val;
-    Lit(Location loc, T val): Expr(loc), val(val) {}
-    void PrettyPrint(std::ostream& os) const { os << val; };
-    Number Eval() const { return Number(val); }
+    Lit(Loc loc): Expr(loc) {}
 };
 
-template <> // Custom pretty printing for float literals.
-void Lit<decltype(Token::float_val)>::PrettyPrint(std::ostream& os) const;
+struct IntLit : Lit {
+    decltype(Token::int_val) val;
+    IntLit(Loc loc, decltype(val) val): Lit(loc), val(val) {}
+    void Print(std::ostream& os) const override { os << val; };
+    void Accept(Visitor& v) override;
+    llvm::Value* Emit(EmitContext& v) const override;
+};
 
-template <> // Custom constant evalutation for string literals.
-Number Lit<decltype(Token::str_val)>::Eval() const;
-
-#endif // AST_H
+struct FloatLit : Lit {
+    decltype(Token::float_val) val;
+    FloatLit(Loc loc, decltype(val) val): Lit(loc), val(val) {}
+    void Print(std::ostream& os) const override;
+    void Accept(Visitor& v) override;
+    llvm::Value* Emit(EmitContext& v) const override;
+};

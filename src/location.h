@@ -1,25 +1,21 @@
-#ifndef LOCATION_H
-#define LOCATION_H
-
+#pragma once
 #include <cassert>
 
-struct Location {
+struct Loc {
     int32_t row, col, end_row, end_col;
 
-    Location(int32_t row, int32_t col,
+    Loc(int32_t row, int32_t col,
              int32_t end_row, int32_t end_col)
         : row(row)
         , col(col)
         , end_row(end_row)
         , end_col(end_col) {}
 
-    Location(Location l, Location r)
-        : Location(l.row, l.col, r.end_row, r.end_col) {}
+    Loc(Loc l, Loc r)
+        : Loc(l.row, l.col, r.end_row, r.end_col) {}
 
-    Location(int32_t row, int32_t col)
-        : Location(row, col, row, col) {}
+    Loc(int32_t row, int32_t col)
+        : Loc(row, col, row, col) {}
 
-    Location(): Location(-1, -1, -1, -1) {}
+    Loc(): Loc(-1, -1, -1, -1) {}
 };
-
-#endif // LOCATION_H

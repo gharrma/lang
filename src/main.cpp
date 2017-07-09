@@ -1,8 +1,10 @@
 #include <iostream>
 #include <fstream>
-#include "util.h"
+#include "emit.h"
 #include "lex.h"
 #include "parse.h"
+#include "util.h"
+#include "typecheck.h"
 
 #define FILE_ERROR(kind) \
     do { \
@@ -15,12 +17,25 @@
     do { \
         std::cerr << e.loc.row << ':' << e.loc.col << " [" #kind "] " \
                   << e.msg << std::endl; \
-        lexer.SkipLine(); \
     } while (0)
 
 int main(int argc, char* argv[]) {
-    if (argc > 1) {
-        // Read from files.
+    if (argc == 2 && strcmp("--lex", argv[1]) == 0) {
+        // Lex from stdin.
+        Lexer lexer(std::cin);
+        std::ostringstream ss;
+        while (auto token = lexer.Get()) {
+            ss << token;
+            if (token.kind == kSemicolon) {
+                std::cout << ss.str() << std::endl;
+                ss = std::ostringstream();
+            } else {
+                ss << ' ';
+            }
+        }
+    }
+    else if (argc > 1) {
+        // Parse from files.
         int i = 1;
         try {
             for (; i < argc; ++i) {
@@ -30,36 +45,43 @@ int main(int argc, char* argv[]) {
                 Lexer lexer(file);
                 Parser parser(lexer);
                 auto expr = parser.ParseExpr();
-                expr->PrettyPrint(std::cout);
-                std::cout << std::endl;
+                std::cout << *expr << std::endl;
             }
         }
         catch (const LexError& e)   { FILE_ERROR(lex); }
         catch (const ParseError& e) { FILE_ERROR(parse); }
         catch (const TypeError& e)  { FILE_ERROR(typecheck); }
-        catch (const InternalCompilerError& e) { LOG(FATAL) << e.msg; }
     }
     else {
         // REPL.
         Lexer lexer(std::cin);
         Parser parser(lexer);
+        EmitContext context;
         while (true) {
             try {
                 std::cout << "c> ";
                 auto expr = parser.ParseExpr();
                 lexer.Get(kSemicolon);
                 std::cout << "[parse] ";
-                expr->PrettyPrint(std::cout);
-                std::cout << std::endl;
-                auto value = expr->Eval();
-                std::cout << "[value] " << value << std::endl;
+                std::cout << *expr << std::endl;
+                auto type_errors = TypeCheck(*expr);
+                for (const auto& e : type_errors)
+                    REPL_ERROR(typecheck);
+                if (!type_errors.empty())
+                    continue;
+                auto ir = expr->Emit(context);
+                std::cout << "[value] " << std::flush;
+                ir->dump();
             }
-            catch (const LexError& e)   { REPL_ERROR(lex); }
-            catch (const ParseError& e) { REPL_ERROR(parse); }
-            catch (const TypeError& e)  { REPL_ERROR(typecheck); }
-            catch (const InternalCompilerError& e) { LOG(FATAL) << e.msg; }
+            catch (const LexError& e) {
+                REPL_ERROR(lex);
+                lexer.SkipLine();
+            }
+            catch (const ParseError& e) {
+                REPL_ERROR(parse);
+                lexer.SkipLine();
+            }
         }
     }
-
     return 0;
 }

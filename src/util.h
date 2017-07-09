@@ -1,6 +1,4 @@
-#ifndef UTIL_H
-#define UTIL_H
-
+#pragma once
 #include <iostream>
 #include <sstream>
 
@@ -17,8 +15,8 @@ static void PrintToStream(std::ostream& os, const T& arg) {
 
 template <typename T, typename... TT>
 static void PrintToStream(std::ostream& os,
-                                 const T& head,
-                                 const TT&... tail) {
+                          const T& head,
+                          const TT&... tail) {
     os << head;
     PrintToStream(os, tail...);
 }
@@ -97,5 +95,3 @@ struct LogVoidify {
 };
 
 } // namespace logging
-
-#endif // UTIL_H

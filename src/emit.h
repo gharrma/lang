@@ -3,11 +3,11 @@
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Module.h"
 
-struct CodegenContext {
+struct EmitContext {
     llvm::LLVMContext context;
     std::unique_ptr<llvm::Module> mod;
     llvm::IRBuilder<> builder;
-    CodegenContext()
+    EmitContext()
         : mod(llvm::make_unique<llvm::Module>("default module", context))
         , builder(context) {}
 };

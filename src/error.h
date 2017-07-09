@@ -1,29 +1,21 @@
-#ifndef ERROR_H
-#define ERROR_H
-
+#pragma once
+#include <string>
 #include "location.h"
-
-struct InternalCompilerError {
-    std::string msg;
-    InternalCompilerError(std::string msg): msg(msg) {}
-};
 
 struct LexError {
     std::string msg;
-    Location loc;
-    LexError(std::string msg, Location loc): msg(msg), loc(loc) {}
+    Loc loc;
+    LexError(std::string msg, Loc loc): msg(msg), loc(loc) {}
 };
 
 struct ParseError {
     std::string msg;
-    Location loc;
-    ParseError(std::string msg, Location loc): msg(msg), loc(loc) {}
+    Loc loc;
+    ParseError(std::string msg, Loc loc): msg(msg), loc(loc) {}
 };
 
 struct TypeError {
     std::string msg;
-    Location loc;
-    TypeError(std::string msg, Location loc): msg(msg), loc(loc) {}
+    Loc loc;
+    TypeError(std::string msg, Loc loc): msg(msg), loc(loc) {}
 };
-
-#endif // ERROR_H

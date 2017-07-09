@@ -13,8 +13,7 @@ message(STATUS "Found LLVM ${LLVM_PACKAGE_VERSION}")
 message(STATUS "Using LLVMConfig.cmake in: ${LLVM_DIR}")
 
 set(CMAKE_CXX_STANDARD 11)
-add_compile_options(-Wall -Werror -pedantic)
-set(CMAKE_CXX_FLAGS "-Wall -Werror -pedantic")
+set(CMAKE_CXX_FLAGS "-Wall -Werror -pedantic -fcolor-diagnostics")
 set(CMAKE_CXX_FLAGS_DEBUG "-g -O0")
 set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG -O3")
 
@@ -23,12 +22,15 @@ add_definitions(${LLVM_DEFINITIONS})
 
 set(SOURCE_FILES
     src/ast.cpp
-    src/codegen.cpp
+    src/emit.cpp
     src/lex.cpp
     src/main.cpp
     src/parse.cpp
     src/token.cpp
-    src/util.cpp)
+    src/type.cpp
+    src/typecheck.cpp
+    src/util.cpp
+    src/visit.cpp)
 
 add_executable(c ${SOURCE_FILES})
 

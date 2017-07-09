@@ -1,6 +1,4 @@
-#ifndef PARSE_H
-#define PARSE_H
-
+#pragma once
 #include <iostream>
 #include "ast.h"
 #include "lex.h"
@@ -18,5 +16,3 @@ private:
 
     Lexer& lex_;
 };
-
-#endif // PARSE_H

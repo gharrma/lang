@@ -1,6 +1,4 @@
-#ifndef LEX_H
-#define LEX_H
-
+#pragma once
 #include "util.h"
 #include "error.h"
 #include "token.h"
@@ -46,12 +44,10 @@ public:
     Token Get() {
         if (auto res = Peek()) {
             buffer_ = Token();
-            LOG(INFO) << "[lex] " << res.loc.row << ':' << res.loc.col
-                      << ' ' << res;
             return res;
         } else {
             throw LexError("Unexpected end of input.",
-                           Location(is_.Row(), is_.Col()));
+                           Loc(is_.Row(), is_.Col()));
         }
     }
 
@@ -76,8 +72,8 @@ public:
 
     void SkipLine() { is_.SkipLine(); buffer_ = Token(); }
 
-    Location CurrLoc() const {
-        return buffer_ ? buffer_.loc : Location(is_.Row(), is_.Col());
+    Loc CurrLoc() const {
+        return buffer_ ? buffer_.loc : Loc(is_.Row(), is_.Col());
     }
 
 private:
@@ -87,5 +83,3 @@ private:
     PositionedStream is_;
     Token buffer_;
 };
-
-#endif // LEX_H

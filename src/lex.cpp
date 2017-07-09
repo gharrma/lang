@@ -1,4 +1,5 @@
 #include "lex.h"
+
 #include <cassert>
 #include "util.h"
 
@@ -59,8 +60,8 @@ Token Lexer::GetToken() {
 
     auto start_row = is_.Row();
     auto start_col = is_.Col();
-    auto GetLocation = [start_row, start_col, this]() {
-        return Location(start_row, start_col, is_.Row(), is_.Col());
+    auto GetLoc = [start_row, start_col, this]() {
+        return Loc(start_row, start_col, is_.Row(), is_.Col());
     };
 
     auto ch = is_.Get();
@@ -70,7 +71,7 @@ Token Lexer::GetToken() {
     if (IsIdStart(ch)) {
         std::string str(1, ch);
         is_.GetWhile(str, IsIdMiddle);
-        return Token(kId, GetLocation(), str);
+        return Token(kId, GetLoc(), str);
     }
 
     // Numbers.
@@ -83,11 +84,10 @@ Token Lexer::GetToken() {
         try {
             if (decimal) {
                 auto val = std::stod(str, &actual_len);
-                lit = Token(kFloatLit, GetLocation(), val);
+                lit = Token(kFloatLit, GetLoc(), val);
             } else {
                 auto val = std::stoull(str, &actual_len);
-                auto int_val = static_cast<decltype(Token::int_val)>(val);
-                lit = Token(kIntLit, GetLocation(), int_val);
+                lit = Token(kIntLit, GetLoc(), val);
             }
             auto len = static_cast<size_t>(lit.loc.end_col - lit.loc.col);
             if (len != actual_len) {
@@ -98,13 +98,13 @@ Token Lexer::GetToken() {
             static const char* kMalformedIntLit = "Malformed integer literal.";
             static const char* kMalformedFloatLit = "Malformed float literal.";
             auto msg = decimal ? kMalformedFloatLit : kMalformedIntLit;
-            throw LexError(msg, GetLocation());
+            throw LexError(msg, GetLoc());
         }
         catch (std::out_of_range e) {
             static const char* kIntLitRange = "Integer literal out of range.";
             static const char* kFloatLitRange = "Float literal out of range.";
             auto msg = decimal ? kFloatLitRange : kIntLitRange;
-            throw LexError(msg, GetLocation());
+            throw LexError(msg, GetLoc());
         }
         return lit;
     }
@@ -113,9 +113,9 @@ Token Lexer::GetToken() {
         case '.': case '=': case ';':
         case '+': case '-': case '*': case '/': case '%':
         case '(': case ')': case '{': case '}': case '[': case ']':
-            return Token(static_cast<TokenKind>(ch), GetLocation());
+            return Token(static_cast<TokenKind>(ch), GetLoc());
         default:
             throw LexError(BuildStr("Unexpected character \'", ch, "\'."),
-                           GetLocation());
+                           GetLoc());
     }
 }
