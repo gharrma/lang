@@ -29,6 +29,12 @@ struct TypeVisitor : Visitor {
     void AfterFnDecl(FnDecl* fn) override;
 };
 
+std::vector<TypeError> TypeCheck(Node& ast) {
+    TypeVisitor v;
+    ast.Accept(v);
+    return v.errors;
+}
+
 void TypeVisitor::AfterId(Id* id) {
     auto it = context.find(id->name.str_val);
     if (it == context.end()) {
@@ -114,10 +120,4 @@ void TypeVisitor::AfterFnDecl(FnDecl* fn) {
                                   fn->body->loc));
         return;
     }
-}
-
-std::vector<TypeError> TypeCheck(Node& ast) {
-    TypeVisitor v;
-    ast.Accept(v);
-    return v.errors;
 }

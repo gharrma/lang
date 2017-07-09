@@ -3,16 +3,13 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include "llvm/IR/Value.h"
 #include "location.h"
 #include "token.h"
 #include "type.h"
 
-// TODO: Turn Emit into visitor, and keep AST decoupled from LLVM back end.
-//       Also possible to decouple types.
-//       In both cases would want to assign each AST node an index.
+// TODO: May be desirable to decouple types.
+// TODO: Might want to assign each node an index (to optimize visitors).
 
-struct EmitContext;
 class Visitor;
 
 struct Node {
@@ -28,15 +25,14 @@ std::ostream& operator<<(std::ostream& os, const Node& node);
 struct Expr : Node {
     std::shared_ptr<Type> type;
     Expr(Loc loc): Node(loc) {}
-    virtual llvm::Value* Emit(EmitContext& v) const = 0; // See emit.cpp.
 };
 
+// TODO: Add pointer to resolved variable?
 struct Id : Expr {
     Token name;
     Id(Token name): Expr(name.loc), name(name) {}
     void Print(std::ostream& os) const override { os << name; }
     void Accept(Visitor& v) override;
-    llvm::Value* Emit(EmitContext& v) const override { return nullptr; }
 };
 
 struct Binary : Expr {
@@ -49,7 +45,6 @@ struct Binary : Expr {
         , rhs(std::move(rhs)) {}
     void Print(std::ostream& os) const override;
     void Accept(Visitor& v) override;
-    llvm::Value* Emit(EmitContext& v) const override;
 };
 
 struct Lit : Expr {
@@ -61,7 +56,6 @@ struct IntLit : Lit {
     IntLit(Loc loc, decltype(val) val): Lit(loc), val(val) {}
     void Print(std::ostream& os) const override { os << val; };
     void Accept(Visitor& v) override;
-    llvm::Value* Emit(EmitContext& v) const override;
 };
 
 struct FloatLit : Lit {
@@ -69,7 +63,6 @@ struct FloatLit : Lit {
     FloatLit(Loc loc, decltype(val) val): Lit(loc), val(val) {}
     void Print(std::ostream& os) const override;
     void Accept(Visitor& v) override;
-    llvm::Value* Emit(EmitContext& v) const override;
 };
 
 struct ParsedType : Node {

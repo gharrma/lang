@@ -62,7 +62,6 @@ int main(int argc, char* argv[]) {
         // REPL.
         Lexer lexer(std::cin);
         Parser parser(lexer);
-        EmitContext context;
         while (true) {
             try {
                 std::cout << "c> ";
@@ -75,7 +74,7 @@ int main(int argc, char* argv[]) {
                     REPL_ERROR(typecheck);
                 if (!type_errors.empty())
                     continue;
-                auto ir = expr->Emit(context);
+                auto ir = EmitExpr(expr.get());
                 std::cout << "[value] " << std::flush;
                 ir->dump();
             }

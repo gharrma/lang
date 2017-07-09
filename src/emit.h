@@ -1,14 +1,7 @@
 #pragma once
-#include <map>
-#include "llvm/IR/IRBuilder.h"
-#include "llvm/IR/LLVMContext.h"
-#include "llvm/IR/Module.h"
+#include "llvm/IR/Value.h"
 
-struct EmitContext {
-    llvm::LLVMContext context;
-    std::unique_ptr<llvm::Module> mod;
-    llvm::IRBuilder<> builder;
-    EmitContext()
-        : mod(llvm::make_unique<llvm::Module>("default module", context))
-        , builder(context) {}
-};
+struct Expr;
+
+// TODO: Pass in context?
+llvm::Value* EmitExpr(Expr* expr);
