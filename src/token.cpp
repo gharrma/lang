@@ -1,5 +1,7 @@
 #include "token.h"
 
+// TODO: It would be convenient to have a lookup table for these strings.
+
 std::ostream& operator<<(std::ostream& os, const TokenKind kind) {
     switch (kind) {
         case kNothing:  return os << "invalid";
@@ -7,8 +9,10 @@ std::ostream& operator<<(std::ostream& os, const TokenKind kind) {
         case kIntLit:   return os << "int";
         case kFloatLit: return os << "float";
         case kStrLit:   return os << "string";
+        case kFn:       return os << "fn";
         case kIf:       return os << "if";
         case kElse:     return os << "else";
+        case kComma:
         case kDot:
         case kEq:
         case kSemicolon:

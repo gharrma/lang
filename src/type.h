@@ -13,6 +13,11 @@ struct Type {
 
 std::ostream& operator<<(std::ostream& os, const Type* t);
 
+struct UnitType : Type {
+    void Print(std::ostream& os) const override;
+    bool Equals(const Type* o) const override;
+};
+
 // i8, i16, i32, i64.
 struct IntType : Type {
     unsigned bits;

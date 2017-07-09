@@ -44,8 +44,10 @@ int main(int argc, char* argv[]) {
                     LOG(FATAL) << BuildStr("Could not open file ", argv[i]);
                 Lexer lexer(file);
                 Parser parser(lexer);
-                auto expr = parser.ParseExpr();
-                std::cout << *expr << std::endl;
+                while (lexer.Peek()) {
+                    auto ast = parser.ParseTopLevelConstruct();
+                    std::cout << *ast << std::endl;
+                }
             }
         }
         catch (const LexError& e)   { FILE_ERROR(lex); }

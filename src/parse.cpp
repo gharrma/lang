@@ -5,12 +5,52 @@
 #include "error.h"
 
 using namespace llvm;
+using std::unique_ptr;
+using llvm::make_unique;
+using std::make_shared;
 using std::move;
 
-std::unique_ptr<Expr> Parser::ParseExpr() {
+// fn, expr
+unique_ptr<Node> Parser::ParseTopLevelConstruct() {
+    if (lex_.Peek(kFn))
+        return ParseFnDecl();
+    return ParseExpr();
+}
+
+// expr
+unique_ptr<Expr> Parser::ParseExpr() {
     auto lhs = ParsePrimaryExpr();
     auto res = ParseSecondaryExpr(move(lhs), 1);
     return res;
+}
+
+// fn id(arg1 type1, arg2 type2, ...) ret_type = expr
+unique_ptr<FnDecl> Parser::ParseFnDecl() {
+    auto fn_start_loc = lex_.Get(kFn).loc;
+    auto name = lex_.Get(kId);
+    auto proto_loc = lex_.CurrLoc();
+    std::vector<unique_ptr<VarDecl>> arg_types;
+    if (lex_.TryGet(kLParen)) {
+        if (lex_.Peek(kLParen))
+            throw ParseError(
+                "Functions without arguments should not have parentheses",
+                lex_.CurrLoc());
+        do {
+            auto param = lex_.Get(kId);
+            auto type = ParseType();
+            arg_types.push_back(make_unique<VarDecl>(param, move(type)));
+        } while (lex_.TryGet(kComma));
+        lex_.Get(kRParen);
+    }
+    auto ret_type = lex_.Peek(kId)
+        ? make_unique<ParsedType>(lex_.Get(kId))
+        : make_unique<ParsedType>(lex_.CurrLoc(), make_shared<UnitType>());
+    auto proto = make_unique<FnProto>(proto_loc,
+                                      move(arg_types),
+                                      move(ret_type));
+    lex_.Get(kEq);
+    auto body = ParseExpr();
+    return make_unique<FnDecl>(fn_start_loc, name, move(proto), move(body));
 }
 
 #define TRY_PARSE(token_kind, node, ...) \
@@ -18,20 +58,23 @@ std::unique_ptr<Expr> Parser::ParseExpr() {
         return make_unique<node>(__VA_ARGS__); \
     while (0)
 
-std::unique_ptr<Expr> Parser::ParsePrimaryExpr() {
+// int, float, str, (expr)
+unique_ptr<Expr> Parser::ParsePrimaryExpr() {
     TRY_PARSE(kIntLit, IntLit, token.loc, token.int_val);
     TRY_PARSE(kFloatLit, FloatLit, token.loc, token.float_val);
-    TRY_PARSE(kId, Id, token.loc, token.str_val);
+    TRY_PARSE(kId, Id, token);
     if (auto token = lex_.TryGet(kLParen)) {
         auto res = ParseExpr();
         lex_.Get(kRParen);
+        res->loc = Loc(token.loc, lex_.CurrLoc());
         return res;
     }
     Expected("primary expression");
 }
 
-std::unique_ptr<Expr> Parser::ParseSecondaryExpr(std::unique_ptr<Expr> lhs,
-                                                  int32_t min_prec) {
+// expr op expr
+unique_ptr<Expr> Parser::ParseSecondaryExpr(unique_ptr<Expr> lhs,
+                                            int32_t min_prec) {
     while (true) {
         Token op = lex_.TryGet([min_prec](TokenKind kind) {
             return token_info.prec[kind] >= min_prec;
@@ -39,10 +82,15 @@ std::unique_ptr<Expr> Parser::ParseSecondaryExpr(std::unique_ptr<Expr> lhs,
         if (!op) return lhs;
         auto op_prec = token_info.prec[op.kind];
         auto rhs = ParsePrimaryExpr();
-        if (token_info.prec[lex_.Peek().kind] > op_prec)
+        auto next_op_prec = token_info.prec[lex_.Peek().kind];
+        if (next_op_prec > op_prec)
             rhs = ParseSecondaryExpr(move(rhs), op_prec + 1);
         lhs = make_unique<Binary>(op, move(lhs), move(rhs));
     }
+}
+
+unique_ptr<ParsedType> Parser::ParseType() {
+    return make_unique<ParsedType>(lex_.Get(kId));
 }
 
 void Parser::Expected(std::string expectation) {
@@ -50,17 +98,13 @@ void Parser::Expected(std::string expectation) {
     Loc loc = next ? next.loc : lex_.CurrLoc();
     std::string msg;
     if (expectation.empty()) {
-        if (next) {
-            msg = BuildStr("Unexpected token \'", next, "\'.");
-        } else {
-            msg = "Unexpected end of input.";
-        }
+        msg = next
+            ? msg = BuildStr("Unexpected token \'", next, "\'.")
+            : msg = "Unexpected end of input.";
     } else {
-        if (next) {
-            msg = BuildStr("Unexpected token \'", next, "\'.");
-        } else {
-            msg = BuildStr("Expected ", expectation, '.');
-        }
+        msg = next
+            ? msg = BuildStr("Unexpected token \'", next, "\'.")
+            : msg = BuildStr("Expected ", expectation, '.');
     }
     throw ParseError(msg, loc);
 }

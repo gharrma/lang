@@ -15,6 +15,14 @@ std::ostream& operator<<(std::ostream& os, const Type* t) {
     return os;
 }
 
+void UnitType::Print(std::ostream& os) const {
+    os << "Unit";
+}
+
+bool UnitType::Equals(const Type* o) const {
+    return dynamic_cast<const UnitType*>(o);
+}
+
 void IntType::Print(std::ostream& os) const {
     os << (signd ? 'i' : 'u') << bits;
 }

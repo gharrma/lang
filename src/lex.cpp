@@ -71,6 +71,8 @@ Token Lexer::GetToken() {
     if (IsIdStart(ch)) {
         std::string str(1, ch);
         is_.GetWhile(str, IsIdMiddle);
+        if (str == "fn")
+            return Token(kFn, GetLoc());
         return Token(kId, GetLoc(), str);
     }
 
@@ -110,7 +112,7 @@ Token Lexer::GetToken() {
     }
 
     switch (ch) {
-        case '.': case '=': case ';':
+        case ',': case '.': case '=': case ';':
         case '+': case '-': case '*': case '/': case '%':
         case '(': case ')': case '{': case '}': case '[': case ']':
             return Token(static_cast<TokenKind>(ch), GetLoc());

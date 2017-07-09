@@ -41,6 +41,10 @@ public:
         return buffer_;
     }
 
+    bool Peek(TokenKind expected) {
+        return Peek().kind == expected;
+    }
+
     Token Get() {
         if (auto res = Peek()) {
             buffer_ = Token();

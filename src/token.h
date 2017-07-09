@@ -10,9 +10,11 @@ enum TokenKind {
     kFloatLit,
     kStrLit,
 
+    kFn,
     kIf,
     kElse,
 
+    kComma     = ',',
     kSemicolon = ';',
     kDot       = '.',
     kEq        = '=',
