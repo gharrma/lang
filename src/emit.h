@@ -1,7 +1,13 @@
 #pragma once
-#include "llvm/IR/Value.h"
 
+struct Node;
 struct Expr;
 
-// TODO: Pass in context?
-llvm::Value* EmitExpr(Expr* expr);
+namespace llvm {
+    class Module;
+    class Value;
+}
+
+void Emit(Node& ast, llvm::Module& mod);
+
+llvm::Value* EmitExpr(Expr& expr, llvm::Module& mod);

@@ -43,12 +43,14 @@ struct TokenInfo {
 
 extern TokenInfo token_info;
 
+using IntLitRep = uint64_t;
+using FloatLitRep = double;
 struct Token {
     TokenKind kind;
     Loc loc;
     union {
-        uint64_t int_val;
-        double float_val;
+        IntLitRep int_val;
+        FloatLitRep float_val;
     };
     std::string str_val;
 

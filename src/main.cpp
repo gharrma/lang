@@ -1,5 +1,8 @@
 #include <iostream>
 #include <fstream>
+#include "llvm/IR/Verifier.h"
+#include "llvm/IR/Module.h"
+#include "llvm/IR/LLVMContext.h"
 #include "emit.h"
 #include "lex.h"
 #include "parse.h"
@@ -44,6 +47,7 @@ int main(int argc, char* argv[]) {
                     LOG(FATAL) << BuildStr("Could not open file ", argv[i]);
                 Lexer lexer(file);
                 Parser parser(lexer);
+                // TODO: Make sure to verify module once we do codegen here.
                 while (lexer.Peek()) {
                     auto ast = parser.ParseTopLevelConstruct();
                     std::cout << *ast << std::endl;
@@ -65,18 +69,27 @@ int main(int argc, char* argv[]) {
         while (true) {
             try {
                 std::cout << "c> ";
-                auto expr = parser.ParseExpr();
+                auto ast = parser.ParseTopLevelConstruct();
                 lexer.Get(kSemicolon);
                 std::cout << "[parse] ";
-                std::cout << *expr << std::endl;
-                auto type_errors = TypeCheck(*expr);
+                std::cout << *ast << std::endl;
+                auto type_errors = TypeCheck(*ast);
                 for (const auto& e : type_errors)
                     REPL_ERROR(typecheck);
                 if (!type_errors.empty())
                     continue;
-                auto ir = EmitExpr(expr.get());
-                std::cout << "[value] " << std::flush;
-                ir->dump();
+                llvm::LLVMContext context;
+                llvm::Module mod("REPL", context);
+                if (auto expr = dynamic_cast<Expr*>(ast.get())) {
+                    std::cout << "[codegen] " << std::flush;
+                    auto val = EmitExpr(*expr, mod);
+                    val->dump();
+                } else {
+                    std::cout << "[codegen] " << std::endl;
+                    Emit(*ast, mod);
+                    mod.rbegin()->dump(); // TODO
+                    // mod.print(llvm::errs(), /*annotation_writer*/ nullptr);
+                }
             }
             catch (const LexError& e) {
                 REPL_ERROR(lex);

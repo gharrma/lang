@@ -13,7 +13,7 @@
 class Visitor;
 
 struct Node {
-    Loc loc;
+    Loc loc; // TODO: Considering converting to method.
     Node(Loc loc): loc(loc) {}
     virtual ~Node() {}
     virtual void Print(std::ostream& os) const = 0;
@@ -21,6 +21,26 @@ struct Node {
 };
 
 std::ostream& operator<<(std::ostream& os, const Node& node);
+
+struct ParsedType : Node {
+    Token name;
+    std::shared_ptr<Type> type;
+    ParsedType(Token name): Node(name.loc), name(name) {}
+    ParsedType(Loc loc, std::shared_ptr<Type> type): Node(loc), type(type) {}
+    void Print(std::ostream& os) const override;
+    void Accept(Visitor& v) override;
+};
+
+struct VarDecl : Node {
+    Token name;
+    std::unique_ptr<ParsedType> parsed_type; // TODO: No need for unique_ptr?
+    VarDecl(Token name, std::unique_ptr<ParsedType> parsed_type)
+        : Node(Loc(name.loc, parsed_type->loc))
+        , name(name)
+        , parsed_type(std::move(parsed_type)) {}
+    void Print(std::ostream& os) const override;
+    void Accept(Visitor& v) override;
+};
 
 struct Expr : Node {
     std::shared_ptr<Type> type;
@@ -30,6 +50,7 @@ struct Expr : Node {
 // TODO: Add pointer to resolved variable?
 struct Id : Expr {
     Token name;
+    VarDecl* resolved = nullptr; // Set by type check.
     Id(Token name): Expr(name.loc), name(name) {}
     void Print(std::ostream& os) const override { os << name; }
     void Accept(Visitor& v) override;
@@ -52,39 +73,21 @@ struct Lit : Expr {
 };
 
 struct IntLit : Lit {
-    decltype(Token::int_val) val;
-    IntLit(Loc loc, decltype(val) val): Lit(loc), val(val) {}
+    IntLitRep val;
+    IntLit(Loc loc, IntLitRep val): Lit(loc), val(val) {}
     void Print(std::ostream& os) const override { os << val; };
     void Accept(Visitor& v) override;
 };
 
 struct FloatLit : Lit {
-    decltype(Token::float_val) val;
-    FloatLit(Loc loc, decltype(val) val): Lit(loc), val(val) {}
+    FloatLitRep val;
+    FloatLit(Loc loc, FloatLitRep val): Lit(loc), val(val) {}
     void Print(std::ostream& os) const override;
     void Accept(Visitor& v) override;
 };
 
-struct ParsedType : Node {
-    Token name;
-    std::shared_ptr<Type> type;
-    ParsedType(Token name): Node(name.loc), name(name) {}
-    ParsedType(Loc loc, std::shared_ptr<Type> type): Node(loc), type(type) {}
-    void Print(std::ostream& os) const override;
-    void Accept(Visitor& v) override;
-};
-
-struct VarDecl : Node {
-    Token name;
-    std::unique_ptr<ParsedType> parsed_type; // TODO: No need for unique_ptr?
-    VarDecl(Token name, std::unique_ptr<ParsedType> parsed_type)
-        : Node(Loc(name.loc, parsed_type->loc))
-        , name(name)
-        , parsed_type(std::move(parsed_type)) {}
-    void Print(std::ostream& os) const override;
-    void Accept(Visitor& v) override;
-};
-
+// TODO: Rename this, as it's not quite a function prototype.
+//       (Closer to parsed function type).
 struct FnProto : Node {
     std::vector<std::unique_ptr<VarDecl>> args;
     std::unique_ptr<ParsedType> ret_type;
