@@ -37,17 +37,11 @@ std::ostream& operator<<(std::ostream& os, const Token& token) {
     switch (token.kind) {
         case kIntLit:
             return os << token.int_val;
-
+        case kFloatLit:
+            os << token.float_val;
         case kId:
         case kStrLit:
             return os << token.str_val;
-
-        case kFloatLit:
-            os << token.float_val;
-            if (token.float_val == static_cast<int64_t>(token.float_val))
-                os << ".0"; // We want to make sure this looks like a float.
-            return os;
-
         case kNothing:
         KEYWORD_TOKEN_CASES:
         SINGLE_CHAR_TOKEN_CASES:

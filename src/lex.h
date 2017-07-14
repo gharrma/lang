@@ -3,6 +3,11 @@
 #include "error.h"
 #include "token.h"
 
+// Reads characters, keeps a lookahead buffer,
+// and tracks the current row and column within a stream.
+//
+// Methods starting with `Get` will return a null character if there's
+// nothing to get (e.g., end of file or predicate not satisfied).
 class PositionedStream {
 public:
     PositionedStream(std::istream& is): is_(is) {}
@@ -19,7 +24,7 @@ public:
 
     void SkipWhitespace();
 
-    void SkipLine() { char ch; while ((ch = Get()) && ch != '\n'); }
+    void SkipLine();
 
     int32_t Row() const { return row_; }
 
@@ -31,13 +36,15 @@ private:
     int32_t row_ = 1, col_ = 1;
 };
 
+// Converts a stream of characters into a stream of tokens with
+// a single lookahead buffer.
 class Lexer {
 public:
     Lexer(std::istream& is): is_(is >> std::noskipws) {}
 
     Token Peek() {
         if (!buffer_)
-            buffer_ = GetToken();
+            buffer_ = NextToken();
         return buffer_;
     }
 
@@ -45,20 +52,21 @@ public:
         return Peek().kind == expected;
     }
 
+    // Throws a parse error if no tokens are available.
     Token Get() {
         if (auto res = Peek()) {
             buffer_ = Token();
             return res;
         } else {
-            throw LexError("Unexpected end of input.",
-                           Loc(is_.Row(), is_.Col()));
+            throw ParseError("Unexpected end of input",
+                             Loc(is_.Row(), is_.Col()));
         }
     }
 
     Token Get(TokenKind expected) {
         auto res = Get();
         if (res.kind != expected)
-            throw ParseError(BuildStr("Unexpected token \'", res, "\'."),
+            throw ParseError(BuildStr("Unexpected token \'", res, "\'"),
                              res.loc);
         return res;
     }
@@ -82,7 +90,7 @@ public:
 
 private:
     // This is where the language-specific magic happens.
-    Token GetToken();
+    Token NextToken();
 
     PositionedStream is_;
     Token buffer_;

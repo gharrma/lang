@@ -26,27 +26,29 @@ int main(int argc, char* argv[]) {
     if (argc == 2 && strcmp("--lex", argv[1]) == 0) {
         // Lex from stdin.
         Lexer lexer(std::cin);
-        std::ostringstream ss;
-        while (auto token = lexer.Get()) {
-            ss << token;
-            if (token.kind == kSemicolon) {
-                std::cout << ss.str() << std::endl;
-                ss = std::ostringstream();
-            } else {
-                ss << ' ';
+        try {
+            while (lexer.Peek()) {
+                auto token = lexer.Get();
+                std::cout << token;
+                if (lexer.Peek()) std::cout << ' ';
             }
+            std::cout << std::endl;
+        }
+        catch (const LexError& e) {
+            REPL_ERROR(lex);
+            exit(1);
         }
     }
     else if (argc > 1) {
         // Parse from files.
         int i = 1;
-        try {
-            for (; i < argc; ++i) {
-                std::ifstream file(argv[i]);
-                if (!file)
-                    LOG(FATAL) << BuildStr("Could not open file ", argv[i]);
-                Lexer lexer(file);
-                Parser parser(lexer);
+        for (; i < argc; ++i) {
+            std::ifstream file(argv[i]);
+            if (!file)
+                LOG(FATAL) << BuildStr("Could not open file ", argv[i]);
+            Lexer lexer(file);
+            Parser parser(lexer);
+            try {
                 // TODO: Make sure to verify module once we do codegen here.
                 while (lexer.Peek()) {
                     auto ast = parser.ParseTopLevelConstruct();
@@ -54,13 +56,14 @@ int main(int argc, char* argv[]) {
                     auto type_errors = TypeCheck(*ast);
                     for (const auto& e : type_errors)
                         FILE_ERROR(typecheck);
-                    if (!type_errors.empty())
+                    if (!type_errors.empty()) {
                         continue;
+                    }
                 }
             }
+            catch (const LexError& e)   { FILE_ERROR(lex); }
+            catch (const ParseError& e) { FILE_ERROR(parse); }
         }
-        catch (const LexError& e)   { FILE_ERROR(lex); }
-        catch (const ParseError& e) { FILE_ERROR(parse); }
     }
     else {
         // REPL.

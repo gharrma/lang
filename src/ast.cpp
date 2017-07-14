@@ -15,13 +15,6 @@ void Binary::Print(std::ostream& os) const {
     os << '(' << *lhs << ' ' << op << ' ' << *rhs << ')';
 }
 
-void FloatLit::Print(std::ostream& os) const {
-    os << val;
-    if (val == static_cast<int64_t>(val)) {
-        os << ".0";
-    }
-}
-
 void ParsedType::Print(std::ostream& os) const {
     // Unnamed parsed type probably means implicit Unit.
     if (name) os << name;

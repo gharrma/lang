@@ -82,7 +82,7 @@ struct IntLit : Lit {
 struct FloatLit : Lit {
     FloatLitRep val;
     FloatLit(Loc loc, FloatLitRep val): Lit(loc), val(val) {}
-    void Print(std::ostream& os) const override;
+    void Print(std::ostream& os) const override { os << val; };
     void Accept(Visitor& v) override;
 };
 

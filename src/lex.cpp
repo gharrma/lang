@@ -55,8 +55,11 @@ void PositionedStream::SkipWhitespace() {
     while (Get([](char ch) { return isspace(ch); })) continue;
 }
 
+void PositionedStream::SkipLine() {
+    for (char ch; (ch = Get()) && ch != '\n';) continue;
+}
 
-Token Lexer::GetToken() {
+Token Lexer::NextToken() {
     is_.SkipWhitespace();
 
     auto start_row = is_.Row();
@@ -125,9 +128,7 @@ Token Lexer::GetToken() {
         case kIntLit:
         case kFloatLit:
         case kStrLit:
-        case kFn:
-        case kIf:
-        case kElse:
+        KEYWORD_TOKEN_CASES:
             break;
     }
 

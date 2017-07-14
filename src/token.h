@@ -63,17 +63,19 @@ static const char* kElseStr = "else";
 
 std::ostream& operator<<(std::ostream& os, const TokenKind kind);
 
+// Holds lookup tables for token info, such as precedence level.
 struct TokenInfo {
     static constexpr size_t range = std::numeric_limits<char>::max() + 1;
     int32_t prec[range]; // Token precedence.
     TokenInfo();
 };
 
-extern TokenInfo token_info;
+extern TokenInfo token_info; // Singleton.
 
 using IntLitRep = uint64_t;
 using FloatLitRep = double;
 
+// Augments TokenKind to store literal values and identifier strings.
 struct Token {
     TokenKind kind;
     Loc loc;
