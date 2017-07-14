@@ -33,6 +33,34 @@ enum TokenKind {
     kRBrack = ']',
 };
 
+// Helps for exhaustive switches.
+#define KEYWORD_TOKEN_CASES \
+    case kFn: \
+    case kIf: \
+    case kElse
+
+// Helps for exhaustive switches.
+#define SINGLE_CHAR_TOKEN_CASES \
+    case kComma: \
+    case kDot: \
+    case kEq: \
+    case kSemicolon: \
+    case kPlus: \
+    case kMinus: \
+    case kTimes: \
+    case kDiv: \
+    case kMod: \
+    case kLParen: \
+    case kRParen: \
+    case kLBrace: \
+    case kRBrace: \
+    case kLBrack: \
+    case kRBrack
+
+static const char* kFnStr = "fn";
+static const char* kIfStr = "if";
+static const char* kElseStr = "else";
+
 std::ostream& operator<<(std::ostream& os, const TokenKind kind);
 
 struct TokenInfo {
@@ -45,6 +73,7 @@ extern TokenInfo token_info;
 
 using IntLitRep = uint64_t;
 using FloatLitRep = double;
+
 struct Token {
     TokenKind kind;
     Loc loc;
@@ -59,10 +88,10 @@ struct Token {
     Token(TokenKind kind, Loc loc)
         : kind(kind), loc(loc) {}
 
-    Token(TokenKind kind, Loc loc, decltype(int_val) val)
+    Token(TokenKind kind, Loc loc, IntLitRep val)
         : kind(kind), loc(loc), int_val(val) {}
 
-    Token(TokenKind kind, Loc loc, decltype(float_val) val)
+    Token(TokenKind kind, Loc loc, FloatLitRep val)
         : kind(kind), loc(loc), float_val(val) {}
 
     Token(TokenKind kind, Loc loc, std::string val)

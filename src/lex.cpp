@@ -55,6 +55,7 @@ void PositionedStream::SkipWhitespace() {
     while (Get([](char ch) { return isspace(ch); })) continue;
 }
 
+
 Token Lexer::GetToken() {
     is_.SkipWhitespace();
 
@@ -71,8 +72,11 @@ Token Lexer::GetToken() {
     if (IsIdStart(ch)) {
         std::string str(1, ch);
         is_.GetWhile(str, IsIdMiddle);
-        if (str == "fn")
-            return Token(kFn, GetLoc());
+        #define TRY_LEX_KEYWORD(kind) \
+            if (str == kind##Str) return Token(kind, GetLoc());
+        TRY_LEX_KEYWORD(kFn)
+        TRY_LEX_KEYWORD(kIf)
+        TRY_LEX_KEYWORD(kElse)
         return Token(kId, GetLoc(), str);
     }
 
@@ -97,27 +101,36 @@ Token Lexer::GetToken() {
             }
         }
         catch (std::invalid_argument e) {
-            static const char* kMalformedIntLit = "Malformed integer literal.";
-            static const char* kMalformedFloatLit = "Malformed float literal.";
+            static const char* kMalformedIntLit = "Malformed integer literal";
+            static const char* kMalformedFloatLit = "Malformed float literal";
             auto msg = decimal ? kMalformedFloatLit : kMalformedIntLit;
             throw LexError(msg, GetLoc());
         }
         catch (std::out_of_range e) {
-            static const char* kIntLitRange = "Integer literal out of range.";
-            static const char* kFloatLitRange = "Float literal out of range.";
+            static const char* kIntLitRange = "Integer literal out of range";
+            static const char* kFloatLitRange = "Float literal out of range";
             auto msg = decimal ? kFloatLitRange : kIntLitRange;
             throw LexError(msg, GetLoc());
         }
         return lit;
     }
 
-    switch (ch) {
-        case ',': case '.': case '=': case ';':
-        case '+': case '-': case '*': case '/': case '%':
-        case '(': case ')': case '{': case '}': case '[': case ']':
-            return Token(static_cast<TokenKind>(ch), GetLoc());
-        default:
-            throw LexError(BuildStr("Unexpected character \'", ch, "\'."),
-                           GetLoc());
+    // Lex single-character tokens with an exhaustive switch to avoid bugs.
+    auto as_single_char_token = static_cast<TokenKind>(ch);
+    switch (as_single_char_token) {
+        SINGLE_CHAR_TOKEN_CASES:
+            return Token(as_single_char_token, GetLoc());
+        case kNothing:
+        case kId:
+        case kIntLit:
+        case kFloatLit:
+        case kStrLit:
+        case kFn:
+        case kIf:
+        case kElse:
+            break;
     }
+
+    throw LexError(BuildStr("Unexpected character \'", ch, "\'"),
+                   GetLoc());
 }

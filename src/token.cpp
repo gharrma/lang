@@ -1,32 +1,18 @@
 #include "token.h"
 
-// TODO: It would be convenient to have a lookup table for these strings.
-
 std::ostream& operator<<(std::ostream& os, const TokenKind kind) {
+    // Note: when adding cases here, be sure to also add them in the lexer,
+    //       especially for keywords (which cannot use an exhaustive switch).
     switch (kind) {
-        case kNothing:  return os << "invalid";
-        case kId:       return os << "id";
-        case kIntLit:   return os << "int";
-        case kFloatLit: return os << "float";
-        case kStrLit:   return os << "string";
-        case kFn:       return os << "fn";
-        case kIf:       return os << "if";
-        case kElse:     return os << "else";
-        case kComma:
-        case kDot:
-        case kEq:
-        case kSemicolon:
-        case kPlus:
-        case kMinus:
-        case kTimes:
-        case kDiv:
-        case kMod:
-        case kLParen:
-        case kRParen:
-        case kLBrace:
-        case kRBrace:
-        case kLBrack:
-        case kRBrack:
+        case kNothing:  return os << "[invalid]";
+        case kId:       return os << "[id]";
+        case kIntLit:   return os << "[int]";
+        case kFloatLit: return os << "[float]";
+        case kStrLit:   return os << "[string]";
+        case kFn:       return os << kFnStr;
+        case kIf:       return os << kIfStr;
+        case kElse:     return os << kElseStr;
+        SINGLE_CHAR_TOKEN_CASES:
             return os << static_cast<char>(kind);
     }
 }
@@ -49,15 +35,22 @@ TokenInfo token_info;
 
 std::ostream& operator<<(std::ostream& os, const Token& token) {
     switch (token.kind) {
-        case kId:     return os << token.str_val;
-        case kIntLit: return os << token.int_val;
-        case kStrLit: return os << token.str_val;
+        case kIntLit:
+            return os << token.int_val;
+
+        case kId:
+        case kStrLit:
+            return os << token.str_val;
+
         case kFloatLit:
             os << token.float_val;
             if (token.float_val == static_cast<int64_t>(token.float_val))
-                os << ".0";
+                os << ".0"; // We want to make sure this looks like a float.
             return os;
-        default:
+
+        case kNothing:
+        KEYWORD_TOKEN_CASES:
+        SINGLE_CHAR_TOKEN_CASES:
             return os << token.kind;
     }
 }
