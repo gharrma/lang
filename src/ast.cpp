@@ -6,51 +6,92 @@
 #include "util.h"
 #include "visit.h"
 
+// Pretty-prints abstract syntax trees with reasonable indentation.
+class PrettyPrinter {
+public:
+    static constexpr int32_t kTabWidth = 4;
+
+    PrettyPrinter(std::ostream& os): os_(os) {}
+
+    void BeginIndent() { indent_ += kTabWidth; }
+    void EndIndent()   { indent_ -= kTabWidth; }
+
+    void NewLine() {
+        os_ << '\n';
+        needs_indent_ = true;
+    }
+
+    template <typename T>
+    PrettyPrinter& operator<<(const T& t) {
+        if (needs_indent_) {
+            for (int32_t i = 0; i < indent_; ++i)
+                os_ << ' ';
+            needs_indent_ = false;
+        }
+        os_ << t;
+        return *this;
+    }
+
+private:
+    int32_t indent_ = 0;
+    bool needs_indent_ = true;
+    std::ostream& os_;
+};
+
 std::ostream& operator<<(std::ostream& os, const Node& node) {
-    node.Print(os);
+    PrettyPrinter pp(os);
+    node.Print(pp);
     return os;
 }
 
-void Block::Print(std::ostream& os) const {
-    // TODO: Indentation.
-    os << "{\n";
+void Block::Print(PrettyPrinter& pp) const {
+    pp << '{';
+    pp.NewLine();
+    pp.BeginIndent();
     for (auto& expr : exprs) {
-        expr->Print(os);
-        os << '\n';
+        expr->Print(pp);
+        pp.NewLine();
     }
-    os << "}";
+    pp.EndIndent();
+    pp << "}";
 }
 
-void Binary::Print(std::ostream& os) const {
-    os << '(' << *lhs << ' ' << op << ' ' << *rhs << ')';
+void Id::Print(PrettyPrinter& pp) const { pp << name; }
+
+void Binary::Print(PrettyPrinter& pp) const {
+    pp << '(' << *lhs << ' ' << op << ' ' << *rhs << ')';
 }
 
-void ParsedType::Print(std::ostream& os) const {
+void ParsedType::Print(PrettyPrinter& pp) const {
     // Unnamed parsed type probably means implicit Unit.
-    if (name) os << name;
+    if (name) pp << name;
 }
 
-void VarDecl::Print(std::ostream& os) const {
-    os << name << ' ' << *parsed_type;
+void VarDecl::Print(PrettyPrinter& pp) const {
+    pp << name << ' ' << *parsed_type;
 }
 
-void FnProto::Print(std::ostream& os) const {
+void IntLit::Print(PrettyPrinter& pp) const { pp << val; }
+
+void FloatLit::Print(PrettyPrinter& pp) const { pp << val; }
+
+void FnProto::Print(PrettyPrinter& pp) const {
     if (!args.empty()) {
-        os << '(';
+        pp << '(';
         for (auto it = args.begin(), e = args.end(); it != e; ++it) {
             if (it != args.begin())
-                os << ", ";
-            os << **it;
+                pp << ", ";
+            pp << **it;
         }
-        os << ')';
+        pp << ')';
     }
     std::ostringstream ss;
     ss << *ret_type;
     if (!ss.str().empty()) {
-        os << ' ' << ss.str();
+        pp << ' ' << ss.str();
     }
 }
 
-void FnDecl::Print(std::ostream& os) const {
-    os << kFn << ' ' << name << *proto << " = " << *body;
+void FnDecl::Print(PrettyPrinter& pp) const {
+    pp << kFn << ' ' << name << *proto << " = " << *body;
 }
