@@ -48,18 +48,23 @@ int main(int argc, char* argv[]) {
                 LOG(FATAL) << BuildStr("Could not open file \'", argv[i], '\'');
             Lexer lexer(file);
             Parser parser(lexer);
+            TypeChecker type_checker;
+            std::vector<std::unique_ptr<Node>> asts;
             try {
                 llvm::LLVMContext context;
                 llvm::Module mod("Main", context);
+                Emitter emitter(mod);
                 while (lexer.Peek()) {
-                    auto ast = parser.ParseTopLevelConstruct();
-                    std::cout << *ast << std::endl;
-                    auto type_errors = TypeCheck(*ast);
-                    for (const auto& e : type_errors)
+                    type_checker.errors.clear();
+                    asts.push_back(parser.ParseTopLevelConstruct());
+                    auto& ast = **asts.rbegin();
+                    std::cout << ast << std::endl;
+                    ast.Accept(type_checker);
+                    for (const auto& e : type_checker.errors)
                         FILE_ERROR(typecheck);
-                    if (!type_errors.empty())
+                    if (!type_checker.errors.empty())
                         continue;
-                    Emit(*ast, mod);
+                    ast.Accept(emitter);
                 }
                 verifyModule(mod, &llvm::errs());
                 std::cout << std::endl;
@@ -74,28 +79,33 @@ int main(int argc, char* argv[]) {
         // REPL.
         Lexer lexer(std::cin);
         Parser parser(lexer);
+        TypeChecker type_checker;
+        std::vector<std::unique_ptr<Node>> asts;
+        llvm::LLVMContext context;
+        llvm::Module mod("REPL", context);
+        Emitter emitter(mod);
         while (true) {
-            llvm::LLVMContext context;
-            llvm::Module mod("REPL", context);
             try {
                 std::cout << "c> ";
-                auto ast = parser.ParseTopLevelConstruct();
+                asts.push_back(parser.ParseTopLevelConstruct());
+                auto& ast = **asts.rbegin();
                 lexer.Get(kSemicolon);
                 std::cout << "\n[parse]\n";
-                std::cout << *ast << std::endl;
+                std::cout << ast << std::endl;
                 std::cout << '\n';
-                auto type_errors = TypeCheck(*ast);
-                for (const auto& e : type_errors)
+                type_checker.errors.clear();
+                ast.Accept(type_checker);
+                for (const auto& e : type_checker.errors)
                     REPL_ERROR(typecheck);
-                if (!type_errors.empty())
+                if (!type_checker.errors.empty())
                     continue;
                 std::cout << "[ir] " << std::flush;
-                if (auto expr = dynamic_cast<Expr*>(ast.get())) {
-                    auto val = EmitExpr(*expr, mod);
+                ast.Accept(emitter);
+                if (auto expr = dynamic_cast<Expr*>(&ast)) {
+                    auto val = emitter.vals.at(expr);
                     val->dump();
                     std::cout << std::endl;
                 } else {
-                    Emit(*ast, mod);
                     mod.rbegin()->dump();
                 }
             }

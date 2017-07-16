@@ -15,7 +15,7 @@ class PrettyPrinter;
 
 struct Node {
     Loc loc; // TODO: Considering converting to method.
-    Node(Loc loc): loc(loc) {}
+    explicit Node(Loc loc): loc(loc) {}
     virtual ~Node() {}
     virtual void Print(PrettyPrinter& pp) const = 0;
     virtual void Accept(Visitor& v) = 0; // See visit.cpp.
@@ -26,15 +26,15 @@ std::ostream& operator<<(std::ostream& os, const Node& node);
 struct ParsedType : Node {
     Token name;
     std::shared_ptr<Type> type;
-    ParsedType(Token name): Node(name.loc), name(name) {}
+    explicit ParsedType(Token name): Node(name.loc), name(name) {}
     ParsedType(Loc loc, std::shared_ptr<Type> type): Node(loc), type(type) {}
     void Print(PrettyPrinter& pp) const override;
     void Accept(Visitor& v) override;
 };
 
 struct Expr : Node {
-    std::shared_ptr<Type> type;
-    Expr(Loc loc): Node(loc) {}
+    std::shared_ptr<Type> type; // Set by type check.
+    explicit Expr(Loc loc): Node(loc) {}
 };
 
 struct VarDecl : Expr {
@@ -69,11 +69,10 @@ struct Block : Expr {
     void Accept(Visitor& v) override;
 };
 
-// TODO: Add pointer to resolved variable?
 struct Id : Expr {
     Token name;
     VarDecl* resolved = nullptr; // Set by type check.
-    Id(Token name): Expr(name.loc), name(name) {}
+    explicit Id(Token name): Expr(name.loc), name(name) {}
     void Print(PrettyPrinter& pp) const override;
     void Accept(Visitor& v) override;
 };
@@ -124,6 +123,7 @@ struct FnProto : Node {
     void Accept(Visitor& v) override;
 };
 
+// Fold FnProto into FnDecl, and make FnDecl an expr.
 struct FnDecl : Node {
     Token name;
     std::unique_ptr<FnProto> proto;
@@ -135,6 +135,18 @@ struct FnDecl : Node {
         , name(name)
         , proto(std::move(proto))
         , body(std::move(body)) {}
+    void Print(PrettyPrinter& pp) const override;
+    void Accept(Visitor& v) override;
+};
+
+struct Call : Expr {
+    Token name;
+    std::vector<std::unique_ptr<Expr>> args;
+    FnDecl* resolved = nullptr; // Set by type check.
+    Call(Loc loc, Token name, std::vector<std::unique_ptr<Expr>> args)
+        : Expr(loc)
+        , name(name)
+        , args(std::move(args)) {}
     void Print(PrettyPrinter& pp) const override;
     void Accept(Visitor& v) override;
 };

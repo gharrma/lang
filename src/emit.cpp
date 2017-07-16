@@ -12,29 +12,6 @@
 
 using namespace llvm;
 
-struct Emitter : Visitor {
-    Module& mod;
-    LLVMContext& context;
-    IRBuilder<> builder;
-    std::unordered_map<Expr*, Value*> vals;
-
-    Emitter(Module& mod)
-        : mod(mod)
-        , context(mod.getContext())
-        , builder(context) {}
-
-    llvm::Type* GetLlvmType(const ::Type* type);
-
-    void AfterBlock(Block& block) override;
-    void AfterId(Id& id) override;
-    void AfterBinary(Binary& binary) override;
-    void AfterIntLit(IntLit& int_lit) override;
-    void AfterFloatLit(FloatLit& float_lit) override;
-    void AfterLocalVarDecl(LocalVarDecl& decl) override;
-    void BeforeFnDecl(FnDecl& fn) override;
-    void AfterFnDecl(FnDecl& fn) override;
-};
-
 llvm::Type* Emitter::GetLlvmType(const ::Type* type) {
     if (auto cast = dynamic_cast<const IntType*>(type)) {
         return llvm::Type::getIntNTy(context, cast->bits);
@@ -72,6 +49,14 @@ void Emitter::AfterBlock(Block& block) {
 
 void Emitter::AfterId(Id& id) {
     vals[&id] = vals.at(id.resolved);
+}
+
+void Emitter::AfterCall(Call& call) {
+    auto fn = fns.at(call.resolved);
+    std::vector<Value*> args(call.args.size());
+    for (size_t i = 0, e = args.size(); i < e; ++i)
+        args[i] = vals.at(call.args[i].get());
+    vals[&call] = builder.CreateCall(fn, args, "call");
 }
 
 void Emitter::AfterBinary(Binary& binary) {
@@ -135,6 +120,7 @@ void Emitter::BeforeFnDecl(FnDecl& fn) {
         vals[fn.proto->args[idx].get()] = &arg_ir;
         ++idx;
     }
+    fns[&fn] = fn_ir;
 
     auto bb = BasicBlock::Create(context, "entry", fn_ir);
     builder.SetInsertPoint(bb);
@@ -148,7 +134,6 @@ void Emitter::AfterFnDecl(FnDecl& fn) {
         builder.CreateRet(vals.at(fn.body.get()));
     }
     auto fn_ir = mod.getFunction(fn.name.str_val);
-    if (verifyFunction(*fn_ir, &llvm::errs())) {
+    if (verifyFunction(*fn_ir, &llvm::errs()))
         LOG(FATAL) << "LLVM function verification failed.";
-    }
 }

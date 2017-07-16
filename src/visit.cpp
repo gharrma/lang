@@ -12,6 +12,13 @@ void Id::Accept(Visitor& v) {
     v.AfterId(*this);
 }
 
+void Call::Accept(Visitor& v) {
+    v.BeforeCall(*this);
+    for (auto& arg : args)
+        arg->Accept(v);
+    v.AfterCall(*this);
+}
+
 void Binary::Accept(Visitor& v) {
     v.BeforeBinary(*this);
     lhs->Accept(v);

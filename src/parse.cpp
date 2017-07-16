@@ -10,14 +10,15 @@ using llvm::make_unique;
 using std::make_shared;
 using std::move;
 
-// fn | expr
+// expr | fn
 unique_ptr<Node> Parser::ParseTopLevelConstruct() {
     if (lex_.Peek(kFn))
         return ParseFnDecl();
     return ParseExpr();
 }
 
-// let x = expr | expr
+// TODO: Split this up.
+// expr | let x = expr
 unique_ptr<Expr> Parser::ParseExpr() {
     if (lex_.TryGet(kLet)) {
         auto name = lex_.Get(kId);
@@ -65,11 +66,29 @@ unique_ptr<FnDecl> Parser::ParseFnDecl() {
         return make_unique<node>(__VA_ARGS__); \
     while (0)
 
-// int | float | id | str | (expr) | {...}
+// int | float | id | str | (expr) | id(arg1, ...) | {...}
 unique_ptr<Expr> Parser::ParsePrimaryExpr() {
-    TRY_PARSE(kIntLit, IntLit, token.loc, token.int_val);
-    TRY_PARSE(kFloatLit, FloatLit, token.loc, token.float_val);
-    TRY_PARSE(kId, Id, token);
+    if (auto int_lit = lex_.TryGet(kIntLit)) {
+        return make_unique<IntLit>(int_lit.loc, int_lit.int_val);
+    }
+    if (auto float_lit = lex_.TryGet(kFloatLit)) {
+        return make_unique<FloatLit>(float_lit.loc, float_lit.float_val);
+    }
+
+    if (auto name = lex_.TryGet(kId)) {
+        if (lex_.TryGet(kLParen)) {
+            std::vector<unique_ptr<Expr>> args;
+            if (!lex_.TryGet(kRParen)) {
+                do { args.push_back(ParseExpr()); }
+                while (lex_.TryGet(kComma));
+                lex_.Get(kRParen);
+            }
+            return make_unique<Call>(
+                Loc(name.loc, lex_.CurrLoc()), name, std::move(args));
+        } else {
+            return make_unique<Id>(name);
+        }
+    }
 
     if (auto lbrace = lex_.TryGet(kLBrace)) {
         std::vector<std::unique_ptr<Expr>> exprs;
@@ -82,7 +101,8 @@ unique_ptr<Expr> Parser::ParsePrimaryExpr() {
 
     if (auto lparen = lex_.TryGet(kLParen)) {
         auto res = ParseExpr();
-        auto rparen = lex_.Get(kRParen);
+        auto rparen = lex_.TryGet(kRParen);
+        if (!rparen) Expected("\')\'");
         res->loc = Loc(lparen.loc, rparen.loc);
         return res;
     }

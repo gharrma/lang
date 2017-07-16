@@ -10,6 +10,7 @@ public:
     virtual void BeforeExpr(Expr& expr) { BeforeNode(expr); }
     virtual void BeforeBlock(Block& block) { BeforeExpr(block); }
     virtual void BeforeId(Id& id) { BeforeExpr(id); }
+    virtual void BeforeCall(Call& call) { BeforeExpr(call); }
     virtual void BeforeBinary(Binary& binary) { BeforeExpr(binary); }
     virtual void BeforeLit(Lit& lit) { BeforeExpr(lit); }
     virtual void BeforeIntLit(IntLit& int_lit) { BeforeLit(int_lit); }
@@ -27,6 +28,7 @@ public:
     virtual void AfterExpr(Expr& expr) { AfterNode(expr); }
     virtual void AfterBlock(Block& block) { AfterExpr(block); }
     virtual void AfterId(Id& id) { AfterExpr(id); }
+    virtual void AfterCall(Call& call) { AfterExpr(call); }
     virtual void AfterBinary(Binary& binary) { AfterExpr(binary); }
     virtual void AfterLit(Lit& lit) { AfterExpr(lit); }
     virtual void AfterIntLit(IntLit& int_lit) { AfterLit(int_lit); }

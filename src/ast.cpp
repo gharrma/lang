@@ -23,16 +23,26 @@ public:
 
     template <typename T>
     PrettyPrinter& operator<<(const T& t) {
+        CheckIndent();
+        os_ << t;
+        return *this;
+    }
+
+    PrettyPrinter& operator<<(const Node& node) {
+        CheckIndent();
+        node.Print(*this);
+        return *this;
+    }
+
+private:
+    void CheckIndent() {
         if (needs_indent_) {
             for (int32_t i = 0; i < indent_; ++i)
                 os_ << ' ';
             needs_indent_ = false;
         }
-        os_ << t;
-        return *this;
     }
 
-private:
     int32_t indent_ = 0;
     bool needs_indent_ = true;
     std::ostream& os_;
@@ -57,6 +67,16 @@ void Block::Print(PrettyPrinter& pp) const {
 }
 
 void Id::Print(PrettyPrinter& pp) const { pp << name; }
+
+void Call::Print(PrettyPrinter& pp) const {
+    pp << name << '(';
+    for (auto it = args.begin(), e = args.end(); it != e; ++it) {
+        if (it != args.begin())
+            pp << ", ";
+        pp << **it;
+    }
+    pp << ')';
+}
 
 void Binary::Print(PrettyPrinter& pp) const {
     pp << '(' << *lhs << ' ' << op << ' ' << *rhs << ')';

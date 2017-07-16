@@ -1,10 +1,7 @@
 #include "typecheck.h"
 
-#include <unordered_map>
-#include "ast.h"
 #include "type.h"
 #include "util.h"
-#include "visit.h"
 
 using std::shared_ptr;
 using std::make_shared;
@@ -15,30 +12,6 @@ static TypeError Expected(const Type& expected, const Type& actual, Loc loc) {
         loc);
 }
 
-struct TypeChecker : Visitor {
-    // TODO: Scoping (both variables and functions).
-    std::unordered_map<std::string, VarDecl*> context;
-    std::vector<TypeError> errors;
-
-    void AfterBlock(Block& block) override;
-    void AfterId(Id& id) override;
-    void AfterBinary(Binary& binary) override;
-    void AfterIntLit(IntLit& int_lit) override;
-    void AfterFloatLit(FloatLit& float_lit) override;
-    void AfterParsedType(ParsedType& type) override;
-    void AfterVarDecl(VarDecl& decl) override;
-    void AfterLocalVarDecl(LocalVarDecl& decl) override;
-    void AfterParam(Param& param) override;
-    void AfterFnProto(FnProto& proto) override;
-    void AfterFnDecl(FnDecl& fn) override;
-};
-
-std::vector<TypeError> TypeCheck(Node& ast) {
-    TypeChecker v;
-    ast.Accept(v);
-    return v.errors;
-}
-
 void TypeChecker::AfterBlock(Block& block) {
     block.type = block.exprs.empty()
         ? make_shared<UnitType>()
@@ -46,8 +19,8 @@ void TypeChecker::AfterBlock(Block& block) {
 }
 
 void TypeChecker::AfterId(Id& id) {
-    auto it = context.find(id.name.str_val);
-    if (it == context.end()) {
+    auto it = vars_.find(id.name.str_val);
+    if (it == vars_.end()) {
         errors.emplace_back(BuildStr("Undeclared variable \'", id.name, '\''),
                             id.loc);
         return;
@@ -55,6 +28,27 @@ void TypeChecker::AfterId(Id& id) {
     auto decl = it->second;
     id.type = decl->type;
     id.resolved = decl;
+}
+
+void TypeChecker::AfterCall(Call& call) {
+    auto it = fns_.find(call.name.str_val);
+    if (it == fns_.end()) {
+        errors.emplace_back(BuildStr("Undeclared function \'", call.name, '\''),
+                            call.name.loc);
+        return;
+    }
+    auto decl = it->second;
+    if (!decl->proto->fn_type)
+        return;
+    if (call.args.size() != decl->proto->args.size()) {
+        errors.emplace_back(
+            BuildStr("Expected ", decl->proto->args.size(), " arguments; ",
+                     "instead found ", call.args.size()),
+            call.loc);
+        return;
+    }
+    call.type = decl->proto->fn_type->ret_type;
+    call.resolved = decl;
 }
 
 void TypeChecker::AfterBinary(Binary& binary) {
@@ -105,15 +99,16 @@ void TypeChecker::AfterParsedType(ParsedType& type) {
 }
 
 void TypeChecker::AfterVarDecl(VarDecl& decl) {
-    auto prev = context.find(decl.name.str_val);
-    if (prev != context.end()) {
+    auto prev = vars_.find(decl.name.str_val);
+    if (prev != vars_.end()) {
+        auto prev_loc = prev->second->loc;
         errors.emplace_back(
             BuildStr("Variable \'", decl.name, "\' already declared at ",
-                     prev->second->name.loc),
+                     prev_loc.row, ':', prev_loc.col),
             decl.loc);
         return;
     }
-    context[decl.name.str_val] = &decl;
+    vars_[decl.name.str_val] = &decl;
 }
 
 void TypeChecker::AfterLocalVarDecl(LocalVarDecl& decl) {
@@ -126,7 +121,6 @@ void TypeChecker::AfterParam(Param& param) {
     TypeChecker::AfterVarDecl(param);
 }
 
-// TODO: Recursion.
 void TypeChecker::AfterFnProto(FnProto& proto) {
     std::vector<shared_ptr<Type>> arg_types(proto.args.size());
     for (size_t i = 0; i < arg_types.size(); ++i) {
@@ -136,6 +130,10 @@ void TypeChecker::AfterFnProto(FnProto& proto) {
     auto ret_type = proto.ret_type->type;
     if (!ret_type) return;
     proto.fn_type = make_shared<FnType>(arg_types, ret_type);
+}
+
+void TypeChecker::BeforeFnDecl(FnDecl& fn) {
+    fns_[fn.name.str_val] = &fn;
 }
 
 void TypeChecker::AfterFnDecl(FnDecl& fn) {
