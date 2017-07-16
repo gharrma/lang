@@ -34,10 +34,16 @@ void ParsedType::Accept(Visitor& v) {
     v.AfterParsedType(*this);
 }
 
-void VarDecl::Accept(Visitor& v) {
-    v.BeforeVarDecl(*this);
+void LocalVarDecl::Accept(Visitor& v) {
+    v.BeforeLocalVarDecl(*this);
+    init->Accept(v);
+    v.AfterLocalVarDecl(*this);
+}
+
+void Param::Accept(Visitor& v) {
+    v.BeforeParam(*this);
     parsed_type->Accept(v);
-    v.AfterVarDecl(*this);
+    v.AfterParam(*this);
 }
 
 void FnProto::Accept(Visitor& v) {

@@ -80,6 +80,7 @@ Token Lexer::NextToken() {
         TRY_LEX_KEYWORD(kFn)
         TRY_LEX_KEYWORD(kIf)
         TRY_LEX_KEYWORD(kElse)
+        TRY_LEX_KEYWORD(kLet)
         return Token(kId, GetLoc(), str);
     }
 

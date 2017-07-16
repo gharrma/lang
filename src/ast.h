@@ -32,20 +32,32 @@ struct ParsedType : Node {
     void Accept(Visitor& v) override;
 };
 
-struct VarDecl : Node {
+struct Expr : Node {
+    std::shared_ptr<Type> type;
+    Expr(Loc loc): Node(loc) {}
+};
+
+struct VarDecl : Expr {
     Token name;
-    std::unique_ptr<ParsedType> parsed_type; // TODO: No need for unique_ptr?
-    VarDecl(Token name, std::unique_ptr<ParsedType> parsed_type)
-        : Node(Loc(name.loc, parsed_type->loc))
-        , name(name)
-        , parsed_type(std::move(parsed_type)) {}
+    VarDecl(Loc loc, Token name): Expr(loc), name(name) {}
+};
+
+struct LocalVarDecl : VarDecl {
+    std::unique_ptr<Expr> init;
+    LocalVarDecl(Token name, std::unique_ptr<Expr> init)
+        : VarDecl(Loc(name.loc, init->loc), name)
+        , init(std::move(init)) {}
     void Print(PrettyPrinter& pp) const override;
     void Accept(Visitor& v) override;
 };
 
-struct Expr : Node {
-    std::shared_ptr<Type> type;
-    Expr(Loc loc): Node(loc) {}
+struct Param : VarDecl {
+    std::unique_ptr<ParsedType> parsed_type;
+    Param(Token name, std::unique_ptr<ParsedType> parsed_type)
+        : VarDecl(Loc(name.loc, parsed_type->loc), name)
+        , parsed_type(std::move(parsed_type)) {}
+    void Print(PrettyPrinter& pp) const override;
+    void Accept(Visitor& v) override;
 };
 
 struct Block : Expr {
@@ -99,11 +111,11 @@ struct FloatLit : Lit {
 // TODO: Rename this, as it's not quite a function prototype.
 //       (Closer to parsed function type).
 struct FnProto : Node {
-    std::vector<std::unique_ptr<VarDecl>> args;
+    std::vector<std::unique_ptr<Param>> args;
     std::unique_ptr<ParsedType> ret_type;
     std::shared_ptr<FnType> fn_type;
     FnProto(Loc start_loc,
-            std::vector<std::unique_ptr<VarDecl>> args,
+            std::vector<std::unique_ptr<Param>> args,
             std::unique_ptr<ParsedType> ret_type)
         : Node(Loc(start_loc, ret_type->loc))
         , args(std::move(args))

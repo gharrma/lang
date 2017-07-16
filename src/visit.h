@@ -17,6 +17,8 @@ public:
 
     virtual void BeforeParsedType(ParsedType& type) { BeforeNode(type); }
     virtual void BeforeVarDecl(VarDecl& decl) { BeforeNode(decl); }
+    virtual void BeforeLocalVarDecl(LocalVarDecl& decl) { BeforeVarDecl(decl); }
+    virtual void BeforeParam(Param& param) { BeforeVarDecl(param); }
     virtual void BeforeFnProto(FnProto& proto) { BeforeNode(proto); }
     virtual void BeforeFnDecl(FnDecl& decl) { BeforeNode(decl); }
 
@@ -32,6 +34,8 @@ public:
 
     virtual void AfterParsedType(ParsedType& type) { AfterNode(type); }
     virtual void AfterVarDecl(VarDecl& decl) { AfterNode(decl); }
+    virtual void AfterLocalVarDecl(LocalVarDecl& decl) { AfterVarDecl(decl); }
+    virtual void AfterParam(Param& param) { AfterVarDecl(param); }
     virtual void AfterFnProto(FnProto& proto) { AfterNode(proto); }
     virtual void AfterFnDecl(FnDecl& decl) { AfterNode(decl); }
 };

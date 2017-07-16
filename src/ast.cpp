@@ -67,7 +67,11 @@ void ParsedType::Print(PrettyPrinter& pp) const {
     if (name) pp << name;
 }
 
-void VarDecl::Print(PrettyPrinter& pp) const {
+void LocalVarDecl::Print(PrettyPrinter& pp) const {
+    pp << kLet << ' ' << name << " = " << *init;
+}
+
+void Param::Print(PrettyPrinter& pp) const {
     pp << name << ' ' << *parsed_type;
 }
 

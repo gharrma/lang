@@ -36,7 +36,7 @@ struct FloatType : Type {
     bool Equals(const Type* o) const override;
 };
 
-// t1, t2, ... -> t_ret
+// (t1, t2, ...) -> t_ret
 struct FnType : Type {
     std::vector<std::shared_ptr<Type>> arg_types;
     std::shared_ptr<Type> ret_type;

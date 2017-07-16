@@ -13,6 +13,7 @@ enum TokenKind {
     kFn,
     kIf,
     kElse,
+    kLet,
 
     kComma     = ',',
     kSemicolon = ';',
@@ -37,7 +38,8 @@ enum TokenKind {
 #define KEYWORD_TOKEN_CASES \
     case kFn: \
     case kIf: \
-    case kElse
+    case kElse: \
+    case kLet
 
 // Helps for exhaustive switches.
 #define SINGLE_CHAR_TOKEN_CASES \
@@ -60,6 +62,7 @@ enum TokenKind {
 static const char* kFnStr = "fn";
 static const char* kIfStr = "if";
 static const char* kElseStr = "else";
+static const char* kLetStr = "let";
 
 std::ostream& operator<<(std::ostream& os, const TokenKind kind);
 

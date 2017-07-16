@@ -16,7 +16,8 @@ static TypeError Expected(const Type& expected, const Type& actual, Loc loc) {
 }
 
 struct TypeChecker : Visitor {
-    std::unordered_map<std::string, VarDecl*> context; // TODO: Scoping.
+    // TODO: Scoping (both variables and functions).
+    std::unordered_map<std::string, VarDecl*> context;
     std::vector<TypeError> errors;
 
     void AfterBlock(Block& block) override;
@@ -26,6 +27,8 @@ struct TypeChecker : Visitor {
     void AfterFloatLit(FloatLit& float_lit) override;
     void AfterParsedType(ParsedType& type) override;
     void AfterVarDecl(VarDecl& decl) override;
+    void AfterLocalVarDecl(LocalVarDecl& decl) override;
+    void AfterParam(Param& param) override;
     void AfterFnProto(FnProto& proto) override;
     void AfterFnDecl(FnDecl& fn) override;
 };
@@ -50,7 +53,7 @@ void TypeChecker::AfterId(Id& id) {
         return;
     }
     auto decl = it->second;
-    id.type = decl->parsed_type->type;
+    id.type = decl->type;
     id.resolved = decl;
 }
 
@@ -113,6 +116,16 @@ void TypeChecker::AfterVarDecl(VarDecl& decl) {
     context[decl.name.str_val] = &decl;
 }
 
+void TypeChecker::AfterLocalVarDecl(LocalVarDecl& decl) {
+    decl.type = decl.init->type;
+    TypeChecker::AfterVarDecl(decl);
+}
+
+void TypeChecker::AfterParam(Param& param) {
+    param.type = param.parsed_type->type;
+    TypeChecker::AfterVarDecl(param);
+}
+
 // TODO: Recursion.
 void TypeChecker::AfterFnProto(FnProto& proto) {
     std::vector<shared_ptr<Type>> arg_types(proto.args.size());
@@ -129,7 +142,10 @@ void TypeChecker::AfterFnDecl(FnDecl& fn) {
     auto body_type = fn.body->type.get();
     auto ret_type = fn.proto->fn_type->ret_type.get();
     if (!body_type || !ret_type) return;
-    if (!body_type->Equals(ret_type)) {
+
+    // We allow a type mismatch if the function returns Unit.
+    // TODO: Replace typeid with a better check.
+    if (!body_type->Equals(ret_type) && typeid(*ret_type) != typeid(UnitType)) {
         errors.push_back(Expected(*fn.proto->fn_type->ret_type,
                                   *fn.body->type,
                                   fn.body->loc));

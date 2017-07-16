@@ -10,26 +10,34 @@ using llvm::make_unique;
 using std::make_shared;
 using std::move;
 
-// fn, expr
+// fn | expr
 unique_ptr<Node> Parser::ParseTopLevelConstruct() {
     if (lex_.Peek(kFn))
         return ParseFnDecl();
     return ParseExpr();
 }
 
-// expr
+// let x = expr | expr
 unique_ptr<Expr> Parser::ParseExpr() {
-    auto lhs = ParsePrimaryExpr();
-    auto res = ParseSecondaryExpr(move(lhs), 1);
-    return res;
+    if (lex_.TryGet(kLet)) {
+        auto name = lex_.Get(kId);
+        lex_.Get(kEq);
+        auto expr = ParseExpr();
+        return make_unique<LocalVarDecl>(name, std::move(expr));
+    }
+    else {
+        auto lhs = ParsePrimaryExpr();
+        auto res = ParseSecondaryExpr(move(lhs), 1);
+        return res;
+    }
 }
 
-// fn id(arg1 type1, arg2 type2, ...) ret_type = expr
+// fn id(arg1 type1, ...) ret_type = expr
 unique_ptr<FnDecl> Parser::ParseFnDecl() {
     auto fn_start_loc = lex_.Get(kFn).loc;
     auto name = lex_.Get(kId);
     auto proto_loc = lex_.CurrLoc();
-    std::vector<unique_ptr<VarDecl>> arg_types;
+    std::vector<unique_ptr<Param>> arg_types;
     if (lex_.TryGet(kLParen)) {
         if (lex_.Peek(kLParen))
             throw ParseError(
@@ -38,16 +46,15 @@ unique_ptr<FnDecl> Parser::ParseFnDecl() {
         do {
             auto param = lex_.Get(kId);
             auto type = ParseType();
-            arg_types.push_back(make_unique<VarDecl>(param, move(type)));
+            arg_types.push_back(make_unique<Param>(param, move(type)));
         } while (lex_.TryGet(kComma));
         lex_.Get(kRParen);
     }
     auto ret_type = lex_.Peek(kId)
         ? make_unique<ParsedType>(lex_.Get(kId))
         : make_unique<ParsedType>(lex_.CurrLoc(), make_shared<UnitType>());
-    auto proto = make_unique<FnProto>(proto_loc,
-                                      move(arg_types),
-                                      move(ret_type));
+    auto proto = make_unique<FnProto>(
+        proto_loc, move(arg_types), move(ret_type));
     lex_.Get(kEq);
     auto body = ParseExpr();
     return make_unique<FnDecl>(fn_start_loc, name, move(proto), move(body));
@@ -58,11 +65,12 @@ unique_ptr<FnDecl> Parser::ParseFnDecl() {
         return make_unique<node>(__VA_ARGS__); \
     while (0)
 
-// int, float, str, (expr), { ... }
+// int | float | id | str | (expr) | {...}
 unique_ptr<Expr> Parser::ParsePrimaryExpr() {
     TRY_PARSE(kIntLit, IntLit, token.loc, token.int_val);
     TRY_PARSE(kFloatLit, FloatLit, token.loc, token.float_val);
     TRY_PARSE(kId, Id, token);
+
     if (auto lbrace = lex_.TryGet(kLBrace)) {
         std::vector<std::unique_ptr<Expr>> exprs;
         while (!lex_.Peek(kRBrace))
@@ -71,12 +79,14 @@ unique_ptr<Expr> Parser::ParsePrimaryExpr() {
         return make_unique<Block>(Loc(lbrace.loc, rbrace.loc),
                                   std::move(exprs));
     }
+
     if (auto lparen = lex_.TryGet(kLParen)) {
         auto res = ParseExpr();
         auto rparen = lex_.Get(kRParen);
         res->loc = Loc(lparen.loc, rparen.loc);
         return res;
     }
+
     Expected("primary expression");
 }
 

@@ -16,7 +16,6 @@ struct Emitter : Visitor {
     Module& mod;
     LLVMContext& context;
     IRBuilder<> builder;
-    std::unordered_map<VarDecl*, Value*> vars;
     std::unordered_map<Expr*, Value*> vals;
 
     Emitter(Module& mod)
@@ -31,7 +30,7 @@ struct Emitter : Visitor {
     void AfterBinary(Binary& binary) override;
     void AfterIntLit(IntLit& int_lit) override;
     void AfterFloatLit(FloatLit& float_lit) override;
-    void AfterVarDecl(VarDecl& decl) override;
+    void AfterLocalVarDecl(LocalVarDecl& decl) override;
     void BeforeFnDecl(FnDecl& fn) override;
     void AfterFnDecl(FnDecl& fn) override;
 };
@@ -46,6 +45,9 @@ llvm::Type* Emitter::GetLlvmType(const ::Type* type) {
         else if (cast->bits == 64)
             return llvm::Type::getDoubleTy(context);
         else LOG(FATAL) << "Invalid width for float type: " << cast->bits;
+    }
+    else if (dynamic_cast<const UnitType*>(type)) {
+        return llvm::Type::getVoidTy(context);
     }
     else LOG(FATAL) << "Unhandled type " << *type;
     return nullptr;
@@ -69,7 +71,7 @@ void Emitter::AfterBlock(Block& block) {
 }
 
 void Emitter::AfterId(Id& id) {
-    vals[&id] = vars[id.resolved];
+    vals[&id] = vals.at(id.resolved);
 }
 
 void Emitter::AfterBinary(Binary& binary) {
@@ -113,8 +115,8 @@ void Emitter::AfterFloatLit(FloatLit& float_lit) {
     vals[&float_lit] = ConstantFP::get(context, APFloat(float_lit.val));
 }
 
-void Emitter::AfterVarDecl(VarDecl& decl) {
-    // TODO
+void Emitter::AfterLocalVarDecl(LocalVarDecl& decl) {
+    vals[&decl] = vals.at(decl.init.get());
 }
 
 void Emitter::BeforeFnDecl(FnDecl& fn) {
@@ -130,7 +132,7 @@ void Emitter::BeforeFnDecl(FnDecl& fn) {
     size_t idx = 0;
     for (auto& arg_ir : fn_ir->args()) {
         arg_ir.setName(fn.proto->args[idx]->name.str_val);
-        vars[fn.proto->args[idx].get()] = &arg_ir;
+        vals[fn.proto->args[idx].get()] = &arg_ir;
         ++idx;
     }
 
@@ -139,7 +141,12 @@ void Emitter::BeforeFnDecl(FnDecl& fn) {
 }
 
 void Emitter::AfterFnDecl(FnDecl& fn) {
-    builder.CreateRet(vals.at(fn.body.get()));
+    // TODO: Remove use of dynamic cast.
+    if (dynamic_cast<UnitType*>(fn.proto->ret_type->type.get())) {
+        builder.CreateRetVoid();
+    } else {
+        builder.CreateRet(vals.at(fn.body.get()));
+    }
     auto fn_ir = mod.getFunction(fn.name.str_val);
     if (verifyFunction(*fn_ir, &llvm::errs())) {
         LOG(FATAL) << "LLVM function verification failed.";

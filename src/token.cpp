@@ -12,6 +12,7 @@ std::ostream& operator<<(std::ostream& os, const TokenKind kind) {
         case kFn:       return os << kFnStr;
         case kIf:       return os << kIfStr;
         case kElse:     return os << kElseStr;
+        case kLet:      return os << kLetStr;
         SINGLE_CHAR_TOKEN_CASES:
             return os << static_cast<char>(kind);
     }

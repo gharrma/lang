@@ -45,21 +45,26 @@ int main(int argc, char* argv[]) {
         for (; i < argc; ++i) {
             std::ifstream file(argv[i]);
             if (!file)
-                LOG(FATAL) << BuildStr("Could not open file ", argv[i]);
+                LOG(FATAL) << BuildStr("Could not open file \'", argv[i], '\'');
             Lexer lexer(file);
             Parser parser(lexer);
             try {
-                // TODO: Make sure to verify module once we do codegen here.
+                llvm::LLVMContext context;
+                llvm::Module mod("Main", context);
                 while (lexer.Peek()) {
                     auto ast = parser.ParseTopLevelConstruct();
                     std::cout << *ast << std::endl;
                     auto type_errors = TypeCheck(*ast);
                     for (const auto& e : type_errors)
                         FILE_ERROR(typecheck);
-                    if (!type_errors.empty()) {
+                    if (!type_errors.empty())
                         continue;
-                    }
+                    Emit(*ast, mod);
                 }
+                verifyModule(mod, &llvm::errs());
+                std::cout << std::endl;
+                mod.dump();
+                std::cout << std::endl;
             }
             catch (const LexError& e)   { FILE_ERROR(lex); }
             catch (const ParseError& e) { FILE_ERROR(parse); }
