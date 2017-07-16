@@ -70,28 +70,28 @@ int main(int argc, char* argv[]) {
         Lexer lexer(std::cin);
         Parser parser(lexer);
         while (true) {
+            llvm::LLVMContext context;
+            llvm::Module mod("REPL", context);
             try {
                 std::cout << "c> ";
                 auto ast = parser.ParseTopLevelConstruct();
                 lexer.Get(kSemicolon);
-                std::cout << "[parse] ";
+                std::cout << "\n[parse]\n";
                 std::cout << *ast << std::endl;
+                std::cout << '\n';
                 auto type_errors = TypeCheck(*ast);
                 for (const auto& e : type_errors)
                     REPL_ERROR(typecheck);
                 if (!type_errors.empty())
                     continue;
-                llvm::LLVMContext context;
-                llvm::Module mod("REPL", context);
+                std::cout << "[ir] " << std::flush;
                 if (auto expr = dynamic_cast<Expr*>(ast.get())) {
-                    std::cout << "[codegen] " << std::flush;
                     auto val = EmitExpr(*expr, mod);
                     val->dump();
+                    std::cout << std::endl;
                 } else {
-                    std::cout << "[codegen] " << std::endl;
                     Emit(*ast, mod);
-                    mod.rbegin()->dump(); // TODO
-                    // mod.print(llvm::errs(), /*annotation_writer*/ nullptr);
+                    mod.rbegin()->dump();
                 }
             }
             catch (const LexError& e) {

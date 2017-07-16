@@ -15,10 +15,11 @@ static TypeError Expected(const Type& expected, const Type& actual, Loc loc) {
         loc);
 }
 
-struct TypeVisitor : Visitor {
+struct TypeChecker : Visitor {
     std::unordered_map<std::string, VarDecl*> context; // TODO: Scoping.
     std::vector<TypeError> errors;
 
+    void AfterBlock(Block& block) override;
     void AfterId(Id& id) override;
     void AfterBinary(Binary& binary) override;
     void AfterIntLit(IntLit& int_lit) override;
@@ -30,12 +31,18 @@ struct TypeVisitor : Visitor {
 };
 
 std::vector<TypeError> TypeCheck(Node& ast) {
-    TypeVisitor v;
+    TypeChecker v;
     ast.Accept(v);
     return v.errors;
 }
 
-void TypeVisitor::AfterId(Id& id) {
+void TypeChecker::AfterBlock(Block& block) {
+    block.type = block.exprs.empty()
+        ? make_shared<UnitType>()
+        : block.exprs.rbegin()->get()->type;
+}
+
+void TypeChecker::AfterId(Id& id) {
     auto it = context.find(id.name.str_val);
     if (it == context.end()) {
         errors.emplace_back(BuildStr("Undeclared variable \'", id.name, '\''),
@@ -47,7 +54,7 @@ void TypeVisitor::AfterId(Id& id) {
     id.resolved = decl;
 }
 
-void TypeVisitor::AfterBinary(Binary& binary) {
+void TypeChecker::AfterBinary(Binary& binary) {
     auto l = binary.lhs->type;
     auto r = binary.rhs->type;
     if (!l || !r) return;
@@ -62,15 +69,15 @@ void TypeVisitor::AfterBinary(Binary& binary) {
     binary.type = l;
 }
 
-void TypeVisitor::AfterIntLit(IntLit& int_lit) {
+void TypeChecker::AfterIntLit(IntLit& int_lit) {
     int_lit.type = make_shared<IntType>(64, /*signed*/ true);
 }
 
-void TypeVisitor::AfterFloatLit(FloatLit& float_lit) {
+void TypeChecker::AfterFloatLit(FloatLit& float_lit) {
     float_lit.type = make_shared<FloatType>(64);
 }
 
-void TypeVisitor::AfterParsedType(ParsedType& type) {
+void TypeChecker::AfterParsedType(ParsedType& type) {
     if (type.type) return; // Pre-filled, probably as Unit.
 
     auto str = type.name.str_val;
@@ -94,7 +101,7 @@ void TypeVisitor::AfterParsedType(ParsedType& type) {
     }
 }
 
-void TypeVisitor::AfterVarDecl(VarDecl& decl) {
+void TypeChecker::AfterVarDecl(VarDecl& decl) {
     auto prev = context.find(decl.name.str_val);
     if (prev != context.end()) {
         errors.emplace_back(
@@ -107,7 +114,7 @@ void TypeVisitor::AfterVarDecl(VarDecl& decl) {
 }
 
 // TODO: Recursion.
-void TypeVisitor::AfterFnProto(FnProto& proto) {
+void TypeChecker::AfterFnProto(FnProto& proto) {
     std::vector<shared_ptr<Type>> arg_types(proto.args.size());
     for (size_t i = 0; i < arg_types.size(); ++i) {
         arg_types[i] = proto.args[i]->parsed_type->type;
@@ -118,7 +125,7 @@ void TypeVisitor::AfterFnProto(FnProto& proto) {
     proto.fn_type = make_shared<FnType>(arg_types, ret_type);
 }
 
-void TypeVisitor::AfterFnDecl(FnDecl& fn) {
+void TypeChecker::AfterFnDecl(FnDecl& fn) {
     auto body_type = fn.body->type.get();
     auto ret_type = fn.proto->fn_type->ret_type.get();
     if (!body_type || !ret_type) return;

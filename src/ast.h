@@ -47,6 +47,15 @@ struct Expr : Node {
     Expr(Loc loc): Node(loc) {}
 };
 
+struct Block : Expr {
+    std::vector<std::unique_ptr<Expr>> exprs;
+    Block(Loc loc, std::vector<std::unique_ptr<Expr>> exprs)
+        : Expr(loc)
+        , exprs(std::move(exprs)) {}
+    void Print(std::ostream& os) const override;
+    void Accept(Visitor& v) override;
+};
+
 // TODO: Add pointer to resolved variable?
 struct Id : Expr {
     Token name;

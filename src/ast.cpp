@@ -11,6 +11,16 @@ std::ostream& operator<<(std::ostream& os, const Node& node) {
     return os;
 }
 
+void Block::Print(std::ostream& os) const {
+    // TODO: Indentation.
+    os << "{\n";
+    for (auto& expr : exprs) {
+        expr->Print(os);
+        os << '\n';
+    }
+    os << "}";
+}
+
 void Binary::Print(std::ostream& os) const {
     os << '(' << *lhs << ' ' << op << ' ' << *rhs << ')';
 }

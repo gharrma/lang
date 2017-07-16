@@ -1,5 +1,12 @@
 #include "visit.h"
 
+void Block::Accept(Visitor& v) {
+    v.BeforeBlock(*this);
+    for (auto& expr : exprs)
+        expr->Accept(v);
+    v.AfterBlock(*this);
+}
+
 void Id::Accept(Visitor& v) {
     v.BeforeId(*this);
     v.AfterId(*this);

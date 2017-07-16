@@ -26,6 +26,7 @@ struct Emitter : Visitor {
 
     llvm::Type* GetLlvmType(const ::Type* type);
 
+    void AfterBlock(Block& block) override;
     void AfterId(Id& id) override;
     void AfterBinary(Binary& binary) override;
     void AfterIntLit(IntLit& int_lit) override;
@@ -59,6 +60,12 @@ Value* EmitExpr(Expr& expr, Module& mod) {
     Emitter emitter(mod);
     expr.Accept(emitter);
     return emitter.vals.at(&expr);
+}
+
+void Emitter::AfterBlock(Block& block) {
+    vals[&block] = block.exprs.empty()
+        ? nullptr
+        : vals.at(block.exprs.rbegin()->get());
 }
 
 void Emitter::AfterId(Id& id) {

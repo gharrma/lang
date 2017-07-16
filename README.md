@@ -20,8 +20,7 @@ $ mkdir build && cd build
 $ cmake .. && make
 ```
 
-If you prefer [Ninja](https://ninja-build.org) over Unix makefiles
-(recommended), you can instead run
+If you prefer [Ninja](https://ninja-build.org) (recommended) over Unix makefiles, you can instead run
 ```
 cmake -G Ninja .. && ninja
 ```

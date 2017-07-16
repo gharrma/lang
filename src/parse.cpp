@@ -58,15 +58,23 @@ unique_ptr<FnDecl> Parser::ParseFnDecl() {
         return make_unique<node>(__VA_ARGS__); \
     while (0)
 
-// int, float, str, (expr)
+// int, float, str, (expr), { ... }
 unique_ptr<Expr> Parser::ParsePrimaryExpr() {
     TRY_PARSE(kIntLit, IntLit, token.loc, token.int_val);
     TRY_PARSE(kFloatLit, FloatLit, token.loc, token.float_val);
     TRY_PARSE(kId, Id, token);
-    if (auto token = lex_.TryGet(kLParen)) {
+    if (auto lbrace = lex_.TryGet(kLBrace)) {
+        std::vector<std::unique_ptr<Expr>> exprs;
+        while (!lex_.Peek(kRBrace))
+            exprs.push_back(ParseExpr());
+        auto rbrace = lex_.Get(kRBrace);
+        return make_unique<Block>(Loc(lbrace.loc, rbrace.loc),
+                                  std::move(exprs));
+    }
+    if (auto lparen = lex_.TryGet(kLParen)) {
         auto res = ParseExpr();
-        lex_.Get(kRParen);
-        res->loc = Loc(token.loc, lex_.CurrLoc());
+        auto rparen = lex_.Get(kRParen);
+        res->loc = Loc(lparen.loc, rparen.loc);
         return res;
     }
     Expected("primary expression");
@@ -99,12 +107,12 @@ void Parser::Expected(std::string expectation) {
     std::string msg;
     if (expectation.empty()) {
         msg = next
-            ? msg = BuildStr("Unexpected token \'", next, "\'.")
-            : msg = "Unexpected end of input.";
+            ? msg = BuildStr("Unexpected token \'", next, "\'")
+            : msg = "Unexpected end of input";
     } else {
         msg = next
-            ? msg = BuildStr("Unexpected token \'", next, "\'.")
-            : msg = BuildStr("Expected ", expectation, '.');
+            ? msg = BuildStr("Unexpected token \'", next, "\'")
+            : msg = BuildStr("Expected ", expectation);
     }
     throw ParseError(msg, loc);
 }
