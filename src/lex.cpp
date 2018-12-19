@@ -75,12 +75,10 @@ Token Lexer::NextToken() {
     if (IsIdStart(ch)) {
         std::string str(1, ch);
         is_.GetWhile(str, IsIdMiddle);
-        #define TRY_LEX_KEYWORD(kind) \
-            if (str == kind##Str) return Token(kind, GetLoc());
-        TRY_LEX_KEYWORD(kFn)
-        TRY_LEX_KEYWORD(kIf)
-        TRY_LEX_KEYWORD(kElse)
-        TRY_LEX_KEYWORD(kLet)
+        if (str == kFnStr)   return Token(kFn,   GetLoc());
+        if (str == kIfStr)   return Token(kIf,   GetLoc());
+        if (str == kElseStr) return Token(kElse, GetLoc());
+        if (str == kLetStr)  return Token(kLet,  GetLoc());
         return Token(kId, GetLoc(), str);
     }
 

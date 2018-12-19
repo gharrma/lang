@@ -61,11 +61,6 @@ unique_ptr<FnDecl> Parser::ParseFnDecl() {
     return make_unique<FnDecl>(fn_start_loc, name, move(proto), move(body));
 }
 
-#define TRY_PARSE(token_kind, node, ...) \
-    do if (auto token = lex_.TryGet(token_kind)) \
-        return make_unique<node>(__VA_ARGS__); \
-    while (0)
-
 // int | float | id | str | (expr) | id(arg1, ...) | {...}
 unique_ptr<Expr> Parser::ParsePrimaryExpr() {
     if (auto int_lit = lex_.TryGet(kIntLit)) {

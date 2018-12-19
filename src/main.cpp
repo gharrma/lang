@@ -68,7 +68,7 @@ int main(int argc, char* argv[]) {
                 }
                 verifyModule(mod, &llvm::errs());
                 std::cout << std::endl;
-                mod.dump();
+                mod.print(llvm::outs(), nullptr);
                 std::cout << std::endl;
             }
             catch (const LexError& e)   { FILE_ERROR(lex); }
@@ -103,10 +103,10 @@ int main(int argc, char* argv[]) {
                 ast.Accept(emitter);
                 if (auto expr = dynamic_cast<Expr*>(&ast)) {
                     auto val = emitter.vals.at(expr);
-                    val->dump();
+                    val->print(llvm::outs());
                     std::cout << std::endl;
                 } else {
-                    mod.rbegin()->dump();
+                    mod.rbegin()->print(llvm::outs());
                 }
             }
             catch (const LexError& e) {
