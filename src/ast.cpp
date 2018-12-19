@@ -55,15 +55,19 @@ std::ostream& operator<<(std::ostream& os, const Node& node) {
 }
 
 void Block::Print(PrettyPrinter& pp) const {
-    pp << '{';
-    pp.NewLine();
-    pp.BeginIndent();
-    for (auto& expr : exprs) {
-        expr->Print(pp);
+    if (exprs.empty()) {
+        pp << "{}";
+    } else {
+        pp << '{';
         pp.NewLine();
+        pp.BeginIndent();
+        for (auto& expr : exprs) {
+            expr->Print(pp);
+            pp.NewLine();
+        }
+        pp.EndIndent();
+        pp << "}";
     }
-    pp.EndIndent();
-    pp << "}";
 }
 
 void Id::Print(PrettyPrinter& pp) const { pp << name; }
