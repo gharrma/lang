@@ -9,14 +9,14 @@
 #include "util.h"
 #include "typecheck.h"
 
-static void HandleFileError(const PositionedError& e,
+static void ReportFileError(const PositionedError& e,
                             const char* filename,
                             const char* kind) {
     std::cerr << filename << ':' << e.loc.row << ':' << e.loc.col
               << " [" << kind << "] " << e.msg << std::endl;
 }
 
-static void HandleReplError(const PositionedError& e, const char* kind) {
+static void ReportReplError(const PositionedError& e, const char* kind) {
     std::cerr << e.loc.row << ':' << e.loc.col
               << " [" << kind << "] " << e.msg << std::endl;
 }
@@ -34,7 +34,7 @@ int main(int argc, char* argv[]) {
             std::cout << std::endl;
         }
         catch (const LexError& e) {
-            HandleReplError(e, "lex");
+            ReportReplError(e, "lex");
             exit(1);
         }
     }
@@ -61,7 +61,7 @@ int main(int argc, char* argv[]) {
                     std::cout << ast << std::endl;
                     ast.Accept(type_checker);
                     for (const auto& e : type_checker.errors)
-                        HandleFileError(e, filename, "typecheck");
+                        ReportFileError(e, filename, "typecheck");
                     if (!type_checker.errors.empty())
                         continue;
                     ast.Accept(emitter);
@@ -71,8 +71,8 @@ int main(int argc, char* argv[]) {
                 mod.print(llvm::outs(), nullptr);
                 std::cout << std::endl;
             }
-            catch (const LexError& e)   { HandleFileError(e, filename, "lex"); }
-            catch (const ParseError& e) { HandleFileError(e, filename, "parse"); }
+            catch (const LexError& e)   { ReportFileError(e, filename, "lex"); }
+            catch (const ParseError& e) { ReportFileError(e, filename, "parse"); }
         }
     }
     else {
@@ -96,7 +96,7 @@ int main(int argc, char* argv[]) {
                 type_checker.errors.clear();
                 ast.Accept(type_checker);
                 for (const auto& e : type_checker.errors)
-                    HandleReplError(e, "typecheck");
+                    ReportReplError(e, "typecheck");
                 if (!type_checker.errors.empty())
                     continue;
                 std::cout << "[ir] " << std::flush;
@@ -110,11 +110,11 @@ int main(int argc, char* argv[]) {
                 }
             }
             catch (const LexError& e) {
-                HandleReplError(e, "lex");
+                ReportReplError(e, "lex");
                 lexer.SkipLine();
             }
             catch (const ParseError& e) {
-                HandleReplError(e, "parse");
+                ReportReplError(e, "parse");
                 lexer.SkipLine();
             }
         }
