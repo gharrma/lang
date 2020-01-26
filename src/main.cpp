@@ -16,11 +16,10 @@
                   << e.msg << std::endl; \
     } while (0)
 
-#define REPL_ERROR(kind) \
-    do { \
-        std::cerr << e.loc.row << ':' << e.loc.col << " [" #kind "] " \
-                  << e.msg << std::endl; \
-    } while (0)
+static void HandleReplError(const PositionedError& e, const char* kind) {
+    std::cerr << e.loc.row << ':' << e.loc.col << " [" << kind << "] "
+              << e.msg << std::endl;
+}
 
 int main(int argc, char* argv[]) {
     if (argc == 2 && strcmp("--lex", argv[1]) == 0) {
@@ -35,7 +34,7 @@ int main(int argc, char* argv[]) {
             std::cout << std::endl;
         }
         catch (const LexError& e) {
-            REPL_ERROR(lex);
+            HandleReplError(e, "lex");
             exit(1);
         }
     }
@@ -96,7 +95,7 @@ int main(int argc, char* argv[]) {
                 type_checker.errors.clear();
                 ast.Accept(type_checker);
                 for (const auto& e : type_checker.errors)
-                    REPL_ERROR(typecheck);
+                    HandleReplError(e, "typecheck");
                 if (!type_checker.errors.empty())
                     continue;
                 std::cout << "[ir] " << std::flush;
@@ -110,11 +109,11 @@ int main(int argc, char* argv[]) {
                 }
             }
             catch (const LexError& e) {
-                REPL_ERROR(lex);
+                HandleReplError(e, "lex");
                 lexer.SkipLine();
             }
             catch (const ParseError& e) {
-                REPL_ERROR(parse);
+                HandleReplError(e, "parse");
                 lexer.SkipLine();
             }
         }

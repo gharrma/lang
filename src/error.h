@@ -2,20 +2,20 @@
 #include <string>
 #include "location.h"
 
-struct LexError {
+struct PositionedError {
     std::string msg;
     Loc loc;
-    LexError(std::string msg, Loc loc): msg(msg), loc(loc) {}
+    PositionedError(std::string msg, Loc loc): msg(msg), loc(loc) {}
 };
 
-struct ParseError {
-    std::string msg;
-    Loc loc;
-    ParseError(std::string msg, Loc loc): msg(msg), loc(loc) {}
+struct LexError : PositionedError {
+    LexError(std::string msg, Loc loc): PositionedError(msg, loc) {}
 };
 
-struct TypeError {
-    std::string msg;
-    Loc loc;
-    TypeError(std::string msg, Loc loc): msg(msg), loc(loc) {}
+struct ParseError : PositionedError {
+    ParseError(std::string msg, Loc loc): PositionedError(msg, loc) {}
+};
+
+struct TypeError : PositionedError {
+    TypeError(std::string msg, Loc loc): PositionedError(msg, loc) {}
 };
