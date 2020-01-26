@@ -1,12 +1,11 @@
 #include "parse.h"
 
+#include <memory>
 #include <unordered_map>
-#include "llvm/ADT/STLExtras.h"
 #include "error.h"
 
-using namespace llvm;
 using std::unique_ptr;
-using llvm::make_unique;
+using std::make_unique;
 using std::make_shared;
 using std::move;
 

@@ -1,14 +1,14 @@
 #include "type.h"
 
+#include <memory>
 #include <sstream>
 #include <vector>
-#include "llvm/ADT/STLExtras.h"
 #include "ast.h"
 #include "error.h"
 #include "util.h"
 #include "visit.h"
 
-using llvm::make_unique;
+using std::make_unique;
 
 std::ostream& operator<<(std::ostream& os, const Type& t) {
     t.Print(os);
