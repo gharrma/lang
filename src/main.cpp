@@ -9,16 +9,16 @@
 #include "util.h"
 #include "typecheck.h"
 
-#define FILE_ERROR(kind) \
-    do { \
-        std::cerr << argv[i] << ':' \
-                  << e.loc.row << ':' << e.loc.col << " [" #kind "] " \
-                  << e.msg << std::endl; \
-    } while (0)
+static void HandleFileError(const PositionedError& e,
+                            const char* filename,
+                            const char* kind) {
+    std::cerr << filename << ':' << e.loc.row << ':' << e.loc.col
+              << " [" << kind << "] " << e.msg << std::endl;
+}
 
 static void HandleReplError(const PositionedError& e, const char* kind) {
-    std::cerr << e.loc.row << ':' << e.loc.col << " [" << kind << "] "
-              << e.msg << std::endl;
+    std::cerr << e.loc.row << ':' << e.loc.col
+              << " [" << kind << "] " << e.msg << std::endl;
 }
 
 int main(int argc, char* argv[]) {
@@ -42,9 +42,10 @@ int main(int argc, char* argv[]) {
         // Parse from files.
         int i = 1;
         for (; i < argc; ++i) {
-            std::ifstream file(argv[i]);
+            const char* filename = argv[i];
+            std::ifstream file(filename);
             if (!file)
-                LOG(FATAL) << BuildStr("Could not open file \'", argv[i], '\'');
+                LOG(FATAL) << BuildStr("Could not open file \'", filename, '\'');
             Lexer lexer(file);
             Parser parser(lexer);
             TypeChecker type_checker;
@@ -60,7 +61,7 @@ int main(int argc, char* argv[]) {
                     std::cout << ast << std::endl;
                     ast.Accept(type_checker);
                     for (const auto& e : type_checker.errors)
-                        FILE_ERROR(typecheck);
+                        HandleFileError(e, filename, "typecheck");
                     if (!type_checker.errors.empty())
                         continue;
                     ast.Accept(emitter);
@@ -70,8 +71,8 @@ int main(int argc, char* argv[]) {
                 mod.print(llvm::outs(), nullptr);
                 std::cout << std::endl;
             }
-            catch (const LexError& e)   { FILE_ERROR(lex); }
-            catch (const ParseError& e) { FILE_ERROR(parse); }
+            catch (const LexError& e)   { HandleFileError(e, filename, "lex"); }
+            catch (const ParseError& e) { HandleFileError(e, filename, "parse"); }
         }
     }
     else {
