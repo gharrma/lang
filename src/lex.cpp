@@ -52,7 +52,7 @@ size_t PositionedStream::GetWhile(std::string& str, Pred pred) {
 }
 
 void PositionedStream::SkipWhitespace() {
-    while (Get([](char ch) { return isspace(ch); })) continue;
+    while (Get(isspace));
 }
 
 void PositionedStream::SkipLine() {
