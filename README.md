@@ -9,9 +9,10 @@ Quick Start Guide
 -----------------
 
 You will need [LLVM](http://llvm.org) (e.g., `brew install llvm`).
-Verify that `llvm-config --version` outputs something close to `4.0.0`.
+I've recently tested with version `9.0.0`.
 
-You will also need [CMake](https://cmake.org) (e.g., `brew install cmake`). Version `3.7` should suffice.
+You will also need [CMake](https://cmake.org) (e.g., `brew install cmake`).
+I've recently tested with version `3.16.2`.
 
 ```
 $ git clone https://github.com/gharrma/lang.git
@@ -26,7 +27,7 @@ cmake -G Ninja .. && ninja
 ```
 
 If you would like a debug build rather than a release build, use
-the `-DCMAKE_BUILD_TYPE=Debug` flag for `cmake`.
+the `--config Debug` flag for `cmake`.
 
 
 REPL
