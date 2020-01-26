@@ -1,0 +1,14 @@
+fn f i64 = 0
+
+fn rec(n i64) i64 =
+    rec(n + 1) - 1
+
+fn h(a i8, b i16, c i32) i64 =
+    1 + 2 * 3
+
+fn i(x i64, y i64) i64 = {
+    let z = x * y
+    x + y + x + f()
+}
+
+fn main = 0
