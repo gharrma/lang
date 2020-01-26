@@ -86,7 +86,7 @@ int main(int argc, char* argv[]) {
         Emitter emitter(mod);
         while (true) {
             try {
-                std::cout << "c> ";
+                std::cout << ">>> ";
                 asts.push_back(parser.ParseTopLevelConstruct());
                 auto& ast = **asts.rbegin();
                 lexer.Get(kSemicolon);

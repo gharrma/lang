@@ -5,7 +5,7 @@ cmake_minimum_required(VERSION 3.7)
 project(lang)
 
 if(NOT CMAKE_BUILD_TYPE)
-  set(CMAKE_BUILD_TYPE Release)
+  set(CMAKE_BUILD_TYPE Debug)
 endif()
 
 find_package(LLVM REQUIRED CONFIG)
@@ -32,7 +32,7 @@ set(SOURCE_FILES
     src/util.cpp
     src/visit.cpp)
 
-add_executable(c ${SOURCE_FILES})
+add_executable(langc ${SOURCE_FILES})
 
 llvm_map_components_to_libnames(llvm_libs core)
-target_link_libraries(c ${llvm_libs})
+target_link_libraries(langc ${llvm_libs})
